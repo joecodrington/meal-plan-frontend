@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Plan Pro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a18;min-height:100vh}
+.app{max-width:900px;margin:0 auto;padding:24px 16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #e0ddd4}
+.logo{font-size:18px;font-weight:600;color:#1a1a18}
+.logo span{color:#1D9E75}
+.user-area{display:flex;align-items:center;gap:10px;font-size:14px;color:#666}
+.btn-sm{padding:6px 14px;border-radius:8px;border:1px solid #d0cdc4;background:#fff;font-size:13px;cursor:pointer;color:#1a1a18}
+.btn-sm:hover{background:#f0ede4}
+.btn-pri{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.btn-pri:hover{background:#0F6E56}
+.auth-wrap{max-width:420px;margin:60px auto}
+.auth-card{background:#fff;border:1px solid #e0ddd4;border-radius:12px;padding:2rem}
+.auth-title{font-size:22px;font-weight:600;margin-bottom:6px}
+.auth-sub{font-size:14px;color:#666;margin-bottom:1.5rem}
+.field{margin-bottom:14px}
+label{display:block;font-size:13px;color:#666;margin-bottom:4px}
+input,select,textarea{width:100%;padding:9px 12px;border:1px solid #d0cdc4;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:#1a1a18}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,0.1)}
+textarea{resize:vertical;min-height:52px}
+.btn-full{width:100%;padding:10px;border-radius:8px;border:none;background:#1D9E75;color:#fff;font-size:15px;font-weight:500;cursor:pointer}
+.btn-full:hover{background:#0F6E56}
+.auth-switch{text-align:center;margin-top:14px;font-size:13px;color:#666}
+.auth-switch a{color:#1D9E75;cursor:pointer;text-decoration:none}
+.error-box{background:#FCEBEB;color:#A32D2D;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.success-box{background:#E1F5EE;color:#0F6E56;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.pbar{display:flex;gap:5px;margin-bottom:1.5rem}
+.ps{flex:1;height:4px;border-radius:2px;background:#e0ddd4}
+.ps.done{background:#1D9E75}.ps.act{background:#5DCAA5}
+.step{display:none}.step.active{display:block}
+.card{background:#fff;border:1px solid #e0ddd4;border-radius:12px;padding:1.25rem;margin-bottom:12px}
+.sec-lbl{font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.frow{display:grid;gap:12px;margin-bottom:12px}
+.frow.c2{grid-template-columns:1fr 1fr}.frow.c3{grid-template-columns:1fr 1fr 1fr}.frow.c1{grid-template-columns:1fr}
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{padding:5px 12px;border-radius:20px;border:1px solid #d0cdc4;font-size:13px;cursor:pointer;background:#fff;color:#1a1a18;transition:all .15s}
+.chip.on{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.brow{display:flex;gap:10px;justify-content:flex-end;margin-top:1.25rem;flex-wrap:wrap}
+.btn{padding:8px 20px;border-radius:8px;font-size:14px;cursor:pointer;border:1px solid #d0cdc4;background:#fff;color:#1a1a18}
+.btn:hover{background:#f5f5f0}
+.btn.pri{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.btn.pri:hover{background:#0F6E56}
+.tab-row{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid #e0ddd4;margin-bottom:1rem}
+.tab{padding:8px 12px;font-size:13px;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:#1D9E75;border-bottom-color:#1D9E75}
+.tp{display:none}.tp.on{display:block}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+.stat{background:#f5f5f0;border-radius:8px;padding:12px;text-align:center}
+.stat-v{font-size:20px;font-weight:600;color:#1a1a18}
+.stat-l{font-size:12px;color:#888;margin-top:2px}
+.meal-card{background:#fff;border:1px solid #e0ddd4;border-radius:12px;padding:1rem;margin-bottom:8px}
+.meal-day{font-size:12px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.meal-slot{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-top:1px solid #f0ede4}
+.mtype{font-size:12px;color:#888;min-width:64px;padding-top:2px;flex-shrink:0}
+.mname{font-size:14px;color:#1a1a18;flex:1}
+.mcals{font-size:12px;color:#888;white-space:nowrap}
+.macrow{display:flex;gap:5px;margin-top:3px;flex-wrap:wrap}
+.mbadge{font-size:11px;padding:1px 7px;border-radius:10px}
+.mp{background:#E6F1FB;color:#185FA5}.mc{background:#FAEEDA;color:#854F0B}.mf{background:#FBEAF0;color:#993556}.mo{background:#E1F5EE;color:#0F6E56}
+.timing-badge{font-size:11px;padding:2px 8px;border-radius:10px;background:#EEEDFE;color:#3C3489;display:inline-block;margin-top:4px}
+.freeze-badge{font-size:11px;padding:2px 8px;border-radius:10px;background:#E1F5EE;color:#0F6E56;display:inline-block;margin-top:4px}
+.tick{width:18px;height:18px;border-radius:4px;border:1.5px solid #d0cdc4;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:2px;background:#fff}
+.tick.on{background:#1D9E75;border-color:#1D9E75}
+.tick.on::after{content:'';width:5px;height:8px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg) translateY(-1px);display:block}
+.sitem{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0ede4;font-size:14px}
+.sitem:last-child{border-bottom:none}
+.sqty{color:#888;font-size:13px;margin-left:auto;margin-right:6px;white-space:nowrap}
+.slink{font-size:12px;color:#1D9E75;text-decoration:none;white-space:nowrap}
+.sprice{font-size:13px;font-weight:500;color:#1a1a18;white-space:nowrap;min-width:40px;text-align:right}
+.shop-cat{margin-bottom:1.25rem}
+.scat-t{font-size:14px;font-weight:600;color:#1a1a18;margin-bottom:6px;display:flex;justify-content:space-between}
+.supp-card{background:#fff;border:1px solid #e0ddd4;border-radius:12px;padding:1rem;margin-bottom:8px;display:flex;gap:12px}
+.supp-icon{width:36px;height:36px;border-radius:8px;background:#E1F5EE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:#0F6E56;font-weight:600}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px}
+.pill-ok{background:#E1F5EE;color:#0F6E56}.pill-danger{background:#FCEBEB;color:#A32D2D}.pill-warn{background:#FAEEDA;color:#854F0B}.pill-info{background:#E6F1FB;color:#185FA5}
+.supp-links{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.supp-link{font-size:12px;color:#1D9E75;text-decoration:none;border:1px solid #9FE1CB;padding:3px 10px;border-radius:20px}
+.mbar-wrap{margin-bottom:12px}
+.mbar-lbl{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}
+.mbar-bg{background:#f0ede4;border-radius:4px;height:8px;overflow:hidden}
+.mbar-fill{height:8px;border-radius:4px}
+.nb{background:#f5f5f0;border-radius:8px;padding:10px 14px;font-size:13px;color:#666;margin-bottom:1rem}
+.day-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.spinner{width:32px;height:32px;border:3px solid #e0ddd4;border-top-color:#1D9E75;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-wrap{text-align:center;padding:3rem 1rem}
+.retailer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px}
+.r-card{border:1px solid #d0cdc4;border-radius:8px;padding:10px;cursor:pointer;text-align:center;font-size:14px;color:#1a1a18;background:#fff}
+.r-card:hover{background:#f5f5f0}
+.r-card.on{border:2px solid #1D9E75;color:#0F6E56;font-weight:600}
+.tier-row{display:flex;gap:10px;flex-wrap:wrap}
+.tier-opt{flex:1;min-width:110px;border:1px solid #d0cdc4;border-radius:8px;padding:10px 12px;cursor:pointer;background:#fff}
+.tier-opt:hover{background:#f5f5f0}
+.tier-opt.on{border:2px solid #1D9E75}
+.tier-name{font-size:14px;font-weight:600;color:#1a1a18}
+.tier-desc{font-size:12px;color:#888;margin-top:3px}
+.cost-big{font-size:36px;font-weight:600;color:#1a1a18}
+.cost-breakdown{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:1rem}
+.cost-cat{background:#fff;border:1px solid #e0ddd4;border-radius:8px;padding:10px 12px}
+.cost-cat-name{font-size:12px;color:#888}
+.cost-cat-val{font-size:18px;font-weight:600;color:#1a1a18;margin-top:2px}
+.cost-bar-track{height:6px;background:#e0ddd4;border-radius:3px;margin-top:6px;overflow:hidden}
+.cost-bar-fill{height:6px;border-radius:3px;background:#1D9E75}
+.saved-profile{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid #e0ddd4;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#fff}
+.saved-profile:hover{background:#f5f5f0}
+.avatar{width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:#0F6E56;flex-shrink:0}
+.home-screen{display:none}.home-screen.active{display:block}
+.day-tag{font-size:11px;padding:2px 8px;border-radius:20px}
+.heart-btn{background:none;border:none;cursor:pointer;font-size:16px;padding:2px 4px;line-height:1;flex-shrink:0;opacity:.4;transition:opacity .15s,transform .15s}
+.heart-btn:hover{opacity:.7}
+.heart-btn.on{opacity:1;transform:scale(1.15)}
+.recipe-btn{font-size:12px;color:#1D9E75;background:none;border:none;cursor:pointer;padding:3px 0;text-decoration:underline;text-underline-offset:2px;margin-top:4px;display:block}
+.recipe-btn:hover{color:#0F6E56}
+.recipe-panel{display:none;margin-top:10px;background:#f5f5f0;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.7;color:#333;border-left:3px solid #1D9E75}
+.recipe-panel.open{display:block}
+.recipe-panel h4{font-size:13px;font-weight:600;color:#1a1a18;margin-bottom:6px}
+.recipe-panel ol{padding-left:18px;margin:0}
+.recipe-panel li{margin-bottom:4px}
+.recipe-loading{color:#888;font-style:italic}
+.adult2-toggle{font-size:13px;color:#1D9E75;cursor:pointer;margin-bottom:8px;display:inline-block}
+.adult2-toggle:hover{color:#0F6E56}
+.tag-out{background:#FAEEDA;color:#854F0B}.tag-train{background:#EEEDFE;color:#3C3489}.tag-race{background:#FCEBEB;color:#A32D2D}.tag-rest{background:#E1F5EE;color:#0F6E56}
+.sport-card{border:1px solid #d0cdc4;border-radius:8px;padding:12px;cursor:pointer;text-align:center;background:#fff}
+.sport-card:hover{background:#f5f5f0}
+.sport-card.on{border:2px solid #1D9E75}
+.sport-name{font-size:13px;font-weight:600;color:#1a1a18}
+.sport-desc{font-size:11px;color:#888;margin-top:2px}
+.fuelling-card{background:#fff;border:1px solid #e0ddd4;border-radius:12px;padding:1rem;margin-bottom:10px}
+.fuelling-phase{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.phase-section{margin-bottom:1.5rem}
+.phase-hd{font-size:14px;font-weight:600;padding:8px 12px;background:#f5f5f0;border-radius:8px;margin-bottom:8px}
+.kids-slot{background:#f5f5f0;border-radius:8px;padding:7px 10px;margin-top:5px}
+.macro-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.mc-card{border:1px solid #e0ddd4;border-radius:12px;padding:1rem}
+.mc-title{font-size:13px;font-weight:600;color:#888;margin-bottom:8px}
+.dp-card{border:1px solid #e0ddd4;border-radius:8px;padding:12px;background:#fff}
+.dp-day{font-size:13px;font-weight:600;color:#1a1a18;margin-bottom:8px}
+.dp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:13px;color:#888}
+.dp-row select{font-size:12px;padding:3px 4px;width:auto;max-width:150px}
+.day-planner{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:8px}
+.child-card{border:1px solid #e0ddd4;border-radius:8px;padding:12px;background:#fff}
+.age-group-pill{font-size:11px;padding:2px 8px;border-radius:20px}
+.ag-toddler{background:#FBEAF0;color:#993556}.ag-child{background:#FAEEDA;color:#854F0B}.ag-tween{background:#E6F1FB;color:#185FA5}.ag-teen{background:#E1F5EE;color:#0F6E56}
+.ft-btn{flex:1;padding:8px 10px;font-size:13px;cursor:pointer;border:none;background:#fff;color:#888;text-align:center}
+.ft-btn.on{background:#1D9E75;color:#fff}
+.waste-card{background:#fff;border:1px solid #e0ddd4;border-radius:12px;padding:1rem;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="topbar">
+  <div class="logo">Meal Plan <span>Pro</span></div>
+  <div class="user-area">
+    <span id="userEmail" style="display:none"></span>
+    <button class="btn-sm" id="logoutBtn" style="display:none" onclick="logout()">Log out</button>
+    <span id="authStatus" style="font-size:13px;color:#888">Not logged in</span>
+  </div>
+</div>
+
+<!-- AUTH SCREENS -->
+<div id="authScreen">
+  <div class="auth-wrap">
+    <!-- LOGIN -->
+    <div id="loginForm" class="auth-card">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">Log in to your Meal Plan Pro account</div>
+      <div id="loginError" class="error-box" style="display:none"></div>
+      <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPassword" placeholder="Your password"/></div>
+      <button class="btn-full" onclick="login()">Log in</button>
+      <div class="auth-switch">No account? <a onclick="showRegister()">Create one free</a></div>
+    </div>
+    <!-- REGISTER -->
+    <div id="registerForm" class="auth-card" style="display:none">
+      <div class="auth-title">Create your account</div>
+      <div class="auth-sub">Start your free 14-day trial — no card needed</div>
+      <div id="registerError" class="error-box" style="display:none"></div>
+      <div class="field"><label>Your name</label><input type="text" id="regName" placeholder="Sarah Thompson"/></div>
+      <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="regPassword" placeholder="At least 8 characters"/></div>
+      <button class="btn-full" onclick="register()">Create account</button>
+      <div class="auth-switch">Already have an account? <a onclick="showLogin()">Log in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" style="display:none">
+
+<!-- HOME -->
+<div class="home-screen active" id="homeScreen">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+    <div><div style="font-size:18px;font-weight:600">Your clients</div>
+    <div style="font-size:14px;color:#888;margin-top:3px">Select a saved client or start a new plan</div></div>
+    <button class="btn pri" onclick="newPlan()">+ New client</button>
+  </div>
+  <div id="savedList"></div>
+</div>
+
+<!-- PLANNER -->
+<div id="plannerWrap" style="display:none">
+<div class="pbar" id="pbar">
+  <div class="ps act" id="ps1"></div><div class="ps" id="ps2"></div><div class="ps" id="ps3"></div>
+  <div class="ps" id="ps4"></div><div class="ps" id="ps5"></div><div class="ps" id="ps6"></div><div class="ps" id="ps7"></div><div class="ps" id="ps8"></div>
+</div>
+
+<!-- S1 adult profile -->
+<div class="step active" id="s1">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px">
+    <div><div style="font-size:18px;font-weight:600">Client profile</div><div style="font-size:14px;color:#888;margin-top:3px">Personal details and dietary needs</div></div>
+    <button class="btn" onclick="showHome()">← All clients</button>
+  </div>
+  <div class="card">
+    <div class="sec-lbl">Personal details</div>
+    <div class="frow c2"><div><label>First name</label><input type="text" id="fname" placeholder="Sarah"/></div><div><label>Last name</label><input type="text" id="lname" placeholder="Thompson"/></div></div>
+    <div class="frow c3"><div><label>Age</label><input type="number" id="age" placeholder="34"/></div><div><label>Sex</label><select id="sex"><option value="">Select</option><option>Female</option><option>Male</option><option>Other</option></select></div><div><label>Activity level</label><select id="activity"><option value="">Select</option><option>Sedentary</option><option>Lightly active</option><option>Moderately active</option><option>Very active</option><option>Athlete</option></select></div></div>
+    <div class="frow c3"><div><label>Height (cm)</label><input type="number" id="height" placeholder="165"/></div><div><label>Weight (kg)</label><input type="number" id="weight" placeholder="68"/></div><div><label>Target weight (kg)</label><input type="number" id="tweight" placeholder="62"/></div></div>
+  </div>
+  <div class="card">
+    <span class="adult2-toggle" id="adult2toggle" onclick="toggleAdult2()">+ Add second adult to this plan</span>
+    <div id="adult2fields" style="display:none">
+      <div class="sec-lbl">Second adult</div>
+      <div class="frow c3">
+        <div><label>Name</label><input type="text" id="fname2" placeholder="James"/></div>
+        <div><label>Age</label><input type="number" id="age2" placeholder="36"/></div>
+        <div><label>Sex</label><select id="sex2"><option value="">Select</option><option>Female</option><option>Male</option><option>Other</option></select></div>
+      </div>
+      <div class="frow c3">
+        <div><label>Weight (kg)</label><input type="number" id="weight2" placeholder="82"/></div>
+        <div><label>Height (cm)</label><input type="number" id="height2" placeholder="178"/></div>
+        <div><label>Activity level</label><select id="activity2"><option>Sedentary</option><option>Lightly active</option><option selected>Moderately active</option><option>Very active</option></select></div>
+      </div>
+      <div><label>Any different dietary needs or allergies</label><input type="text" id="diet2" placeholder="e.g. nut allergy, dairy-free, vegan"/></div>
+    </div>
+  </div>
+  <div class="card"><div class="sec-lbl">Health goals</div>
+    <div class="chip-group" id="goals"><div class="chip" onclick="tc(this)">Weight loss</div><div class="chip" onclick="tc(this)">Muscle gain</div><div class="chip" onclick="tc(this)">Maintain weight</div><div class="chip" onclick="tc(this)">Improve energy</div><div class="chip" onclick="tc(this)">Heart health</div><div class="chip" onclick="tc(this)">Endurance performance</div><div class="chip" onclick="tc(this)">Strength performance</div><div class="chip" onclick="tc(this)">Recovery</div><div class="chip" onclick="tc(this)">Family nutrition</div></div>
+  </div>
+  <div class="card">
+    <div class="sec-lbl">Dietary requirements</div>
+    <div class="chip-group" id="diet"><div class="chip" onclick="tc(this)">None</div><div class="chip" onclick="tc(this)">Vegetarian</div><div class="chip" onclick="tc(this)">Vegan</div><div class="chip" onclick="tc(this)">Gluten-free</div><div class="chip" onclick="tc(this)">Dairy-free</div><div class="chip" onclick="tc(this)">Nut allergy</div><div class="chip" onclick="tc(this)">Halal</div><div class="chip" onclick="tc(this)">Kosher</div><div class="chip" onclick="tc(this)">Pescatarian</div></div>
+    <div style="margin-top:10px"><label>Other allergies</label><input type="text" id="allergies" placeholder="e.g. shellfish, eggs"/></div>
+  </div>
+  <div class="card">
+    <div class="sec-lbl">Preferences &amp; plan settings</div>
+    <div class="frow c2"><div><label>Foods they dislike</label><input type="text" id="dislikes" placeholder="e.g. mushrooms, liver"/></div><div><label>Cooking time</label><select id="cooktime"><option value="">No preference</option><option>Under 20 mins</option><option>Up to 30 mins</option><option>Up to 1 hour</option><option>Meal prep friendly</option></select></div></div>
+    <div class="frow c3"><div><label>Batch cooking</label><select id="batchcook"><option value="yes">Yes</option><option value="no">No</option><option value="some">Some meals</option></select></div><div><label>Snacks</label><select id="incSnacks"><option value="yes">Yes, 2/day</option><option value="one">Yes, 1/day</option><option value="no">No</option></select></div><div><label>Plan days</label><select id="days"><option>3</option><option>5</option><option selected>7</option><option>14</option></select></div></div>
+    <div class="frow c1"><label>Additional notes</label><textarea id="notes" placeholder="e.g. works shifts, has young children, training for a marathon..."></textarea></div>
+  </div>
+  <div class="brow"><button class="btn pri" onclick="goS(2)">Next: sports goal →</button></div>
+</div>
+
+<!-- S2 sports -->
+<div class="step" id="s2">
+  <div style="margin-bottom:1.25rem"><div style="font-size:18px;font-weight:600">Sports goal &amp; event</div><div style="font-size:14px;color:#888;margin-top:3px">Nutrition will be periodised around training days</div></div>
+  <div class="card">
+    <div class="sec-lbl">Has a specific sports goal?</div>
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div id="hasSportsYes" class="tier-opt on" onclick="toggleSports(true)" style="flex:1;text-align:center"><div class="tier-name">Yes — plan around training</div></div>
+      <div id="hasSportsNo" class="tier-opt" onclick="toggleSports(false)" style="flex:1;text-align:center"><div class="tier-name">No — general health only</div></div>
+    </div>
+  </div>
+  <div id="sportsFields">
+    <div class="card">
+      <div class="sec-lbl">Sport / activity</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:12px" id="sportGrid">
+        <div class="sport-card on" onclick="selSport(this)" data-s="Long distance running"><div class="sport-name">Long distance running</div><div class="sport-desc">Marathon, half, 10k+</div></div>
+        <div class="sport-card" onclick="selSport(this)" data-s="Cycling"><div class="sport-name">Cycling</div><div class="sport-desc">Road, MTB, triathlon</div></div>
+        <div class="sport-card" onclick="selSport(this)" data-s="Triathlon"><div class="sport-name">Triathlon</div><div class="sport-desc">Swim, bike, run</div></div>
+        <div class="sport-card" onclick="selSport(this)" data-s="Strength training"><div class="sport-name">Strength training</div><div class="sport-desc">Weights, powerlifting</div></div>
+        <div class="sport-card" onclick="selSport(this)" data-s="Team sports"><div class="sport-name">Team sports</div><div class="sport-desc">Football, rugby</div></div>
+        <div class="sport-card" onclick="selSport(this)" data-s="Swimming"><div class="sport-name">Swimming</div><div class="sport-desc">Pool, open water</div></div>
+        <div class="sport-card" onclick="selSport(this)" data-s="CrossFit / HIIT"><div class="sport-name">CrossFit / HIIT</div><div class="sport-desc">High intensity</div></div>
+        <div class="sport-card" onclick="selSport(this)" data-s="Other endurance"><div class="sport-name">Other</div><div class="sport-desc">Specify below</div></div>
+      </div>
+      <div><label>Specific event or race (optional)</label><input type="text" id="eventName" placeholder="e.g. London Marathon, local parkrun"/></div>
+    </div>
+    <div class="card">
+      <div class="sec-lbl">Training details</div>
+      <div class="frow c3">
+        <div><label>Sessions per week</label><select id="trainDays"><option value="2">2 days</option><option value="3">3 days</option><option value="4" selected>4 days</option><option value="5">5 days</option><option value="6">6 days</option></select></div>
+        <div><label>Session duration</label><select id="sessionDuration"><option value="30">30 mins</option><option value="45">45 mins</option><option value="60" selected>60 mins</option><option value="90">90 mins</option><option value="120">2+ hours</option></select></div>
+        <div><label>Intensity</label><select id="intensity"><option value="easy">Easy / base</option><option value="moderate" selected>Moderate</option><option value="hard">Hard</option><option value="very_hard">Very hard</option></select></div>
+      </div>
+      <div class="frow c3">
+        <div><label>Training time</label><select id="trainTime"><option value="morning">Morning</option><option value="lunchtime">Lunchtime</option><option value="evening" selected>Evening</option><option value="varied">Varied</option></select></div>
+        <div><label>Long session day</label><select id="longDay"><option value="Saturday">Saturday</option><option value="Sunday">Sunday</option><option value="Wednesday">Wednesday</option><option value="none">No regular day</option></select></div>
+        <div><label>Weeks to event</label><input type="number" id="weeksToEvent" placeholder="e.g. 8" min="1" max="52"/></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="frow c2">
+        <div><label>Carb loading strategy</label><select id="carbLoad"><option value="none">No carb loading</option><option value="day_before">1-day load (night before)</option><option value="three_day">3-day classic protocol</option><option value="week_before">Gradual final week</option></select></div>
+        <div><label>Mid-session fuelling</label><select id="midFuel"><option value="gels">Energy gels</option><option value="chews">Energy chews / bars</option><option value="real_food">Real food (banana, dates)</option><option value="drink">Sports drinks only</option><option value="none">Nothing mid-session</option></select></div>
+      </div>
+      <div><label>GI sensitivity</label><select id="giSensitivity"><option value="none">No issues</option><option value="mild">Mild sensitivity</option><option value="moderate">Moderate — avoid fibre pre-run</option><option value="severe">Severe — strict low-residue</option></select></div>
+    </div>
+  </div>
+  <div class="brow"><button class="btn" onclick="goS(1)">← Back</button><button class="btn pri" onclick="goS(3)">Next: children →</button></div>
+</div>
+
+<!-- S3 children -->
+<div class="step" id="s3">
+  <div style="margin-bottom:1.25rem"><div style="font-size:18px;font-weight:600">Children</div><div style="font-size:14px;color:#888;margin-top:3px">Add children for age-adjusted portions. Skip if none.</div></div>
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+      <button class="btn" onclick="changeKids(-1)">−</button>
+      <span id="kidCount" style="font-size:22px;font-weight:600">0</span>
+      <button class="btn" onclick="changeKids(1)">+</button>
+      <span style="font-size:13px;color:#888">children</span>
+    </div>
+    <div id="childCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+  </div>
+  <div class="card" id="mealSharingCard" style="display:none">
+    <div class="sec-lbl">Meal sharing</div>
+    <div style="display:flex;gap:0;border:1px solid #d0cdc4;border-radius:8px;overflow:hidden" id="sharingToggle">
+      <div class="ft-btn on" onclick="selSharing(this,'same')" style="background:#1D9E75;color:#fff">Same meals, kids' portions</div>
+      <div class="ft-btn" onclick="selSharing(this,'separate')">Separate kids' meals</div>
+      <div class="ft-btn" onclick="selSharing(this,'mixed')">Mix per meal</div>
+    </div>
+  </div>
+  <div class="card" id="kidsPrefsCard" style="display:none">
+    <div class="frow c2"><div><label>Kids' dislikes</label><input type="text" id="kidDislikes" placeholder="e.g. spicy food, onions"/></div><div><label>Kids' allergies</label><input type="text" id="kidAllergies" placeholder="e.g. peanut allergy"/></div></div>
+    <div class="frow c2"><div><label>Picky level</label><select id="pickyLevel"><option value="not">Not picky</option><option value="mild" selected>Mildly picky</option><option value="moderate">Quite picky</option><option value="very">Very picky</option></select></div><div><label>Kids' snacks</label><select id="kidSnacksOpt"><option value="yes">Yes</option><option value="after">After-school only</option><option value="no">No</option></select></div></div>
+  </div>
+  <div class="brow"><button class="btn" onclick="goS(2)">← Back</button><button class="btn pri" onclick="goS(4)">Next: schedule →</button></div>
+</div>
+
+<!-- S4 schedule -->
+<div class="step" id="s4">
+  <div style="margin-bottom:1.25rem"><div style="font-size:18px;font-weight:600">Weekly schedule</div><div style="font-size:14px;color:#888;margin-top:3px">Training days get adjusted macros automatically</div></div>
+  <div class="card">
+    <div class="frow c2"><div><label>Work lunch</label><select id="workLunch"><option value="home">At home / packed</option><option value="canteen">Work canteen</option><option value="shops">Out to shops/cafes</option><option value="mixed">Mixed</option></select></div><div><label>Lunch budget</label><select id="lunchBudget"><option value="">Any</option><option value="under5">Under £5</option><option value="5to8">£5–£8</option><option value="8to12">£8–£12</option><option value="over12">£12+</option></select></div></div>
+  </div>
+  <div class="card"><div class="sec-lbl">Day-by-day</div><div class="day-planner" id="dayPlanner"></div></div>
+  <div class="brow"><button class="btn" onclick="goS(3)">← Back</button><button class="btn pri" onclick="goS(5)">Next: shopping →</button></div>
+</div>
+
+<!-- S5 retailer -->
+<div class="step" id="s5">
+  <div style="margin-bottom:1.25rem"><div style="font-size:18px;font-weight:600">Shopping preferences</div></div>
+  <div class="card"><div class="sec-lbl">Preferred retailer</div>
+    <div class="retailer-grid"><div class="r-card on" onclick="selR(this)" data-r="Tesco">Tesco</div><div class="r-card" onclick="selR(this)" data-r="Sainsbury's">Sainsbury's</div><div class="r-card" onclick="selR(this)" data-r="Asda">Asda</div><div class="r-card" onclick="selR(this)" data-r="Waitrose">Waitrose</div><div class="r-card" onclick="selR(this)" data-r="M&S">M&S</div><div class="r-card" onclick="selR(this)" data-r="Ocado">Ocado</div><div class="r-card" onclick="selR(this)" data-r="Morrisons">Morrisons</div><div class="r-card" onclick="selR(this)" data-r="Aldi">Aldi</div><div class="r-card" onclick="selR(this)" data-r="Lidl">Lidl</div></div>
+  </div>
+  <div class="card"><div class="sec-lbl">Product tier</div>
+    <div class="tier-row"><div class="tier-opt on" onclick="selT(this)" data-t="essentials"><div class="tier-name">Essentials / own brand</div><div class="tier-desc">Best value</div></div><div class="tier-opt" onclick="selT(this)" data-t="mid"><div class="tier-name">Mid-range</div><div class="tier-desc">Quality &amp; price</div></div><div class="tier-opt" onclick="selT(this)" data-t="organic"><div class="tier-name">Organic / finest</div><div class="tier-desc">Premium</div></div></div>
+  </div>
+  <div class="brow"><button class="btn" onclick="goS(4)">← Back</button><button class="btn pri" onclick="startGen()">Generate plan →</button></div>
+</div>
+
+<!-- S6 generating -->
+<div class="step" id="s6">
+  <div class="gen-wrap"><div class="spinner"></div>
+    <div id="genTxt" style="font-weight:600;font-size:15px;margin-bottom:6px">Building your plan...</div>
+    <div id="genSub" style="font-size:13px;color:#888">Calculating nutritional targets</div>
+  </div>
+</div>
+
+<!-- S7 results -->
+<div class="step" id="s7">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:10px">
+    <div id="clientBadge" style="display:inline-flex;align-items:center;gap:6px;background:#E1F5EE;color:#0F6E56;padding:4px 14px;border-radius:20px;font-size:13px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="saveBtn" onclick="saveProfile()">Save client</button>
+      <button class="btn" onclick="showHome()">← All clients</button>
+    </div>
+  </div>
+  <div class="stat-grid" id="statGrid"></div>
+  <div class="nb" id="nb"></div>
+  <div class="tab-row">
+    <div class="tab on" onclick="swTab('plan',this)">Meal plan</div>
+    <div class="tab" onclick="swTab('fuelling',this)">Fuelling guide</div>
+    <div class="tab" onclick="swTab('shop',this)">Shopping</div>
+    <div class="tab" onclick="swTab('cost',this)">Cost</div>
+    <div class="tab" onclick="swTab('nutr',this)">Nutrients</div>
+    <div class="tab" onclick="swTab('supps',this)">Supplements</div>
+    <div class="tab" onclick="swTab('client',this)">Client view</div>
+  </div>
+  <div class="tp on" id="tp-plan"><div class="day-grid" id="planGrid"></div></div>
+  <div class="tp" id="tp-fuelling"><div id="fuellingView"></div></div>
+  <div class="tp" id="tp-shop"><div id="shopList"></div></div>
+  <div class="tp" id="tp-cost"><div id="costView"></div></div>
+  <div class="tp" id="tp-nutr"><div id="nutrView"></div></div>
+  <div class="tp" id="tp-supps"><div id="suppsView"></div></div>
+  <div class="tp" id="tp-client"><div id="clientView"></div></div>
+  <div class="brow">
+    <button class="btn" onclick="goS(1)">← Edit</button>
+    <button class="btn pri" onclick="exportIcal()">Add to calendar</button>
+  </div>
+</div>
+
+</div><!-- end plannerWrap -->
+</div><!-- end mainApp -->
+</div><!-- end app -->
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────
+const BACKEND = 'https://meal-plan-backend-su6p.onrender.com';
+
+// ── STATE ──────────────────────────────────────────────
+var APP={retailer:'Tesco',tier:'essentials',plan:[],shopping:{},supplements:[],nutrients:{},macros:{},nutrientNotes:'',wasteNotes:[],batchTips:[],client:{},children:[],sharingMode:'same',daySchedule:[],costSummary:{},fuellingGuide:{},trainingDayMacros:{},restDayMacros:{},familySizeNote:''};
+var curStep=1;var kidCount=0;var hasSports=true;var editingProfileId=null;
+var authToken=localStorage.getItem('authToken')||null;
+var currentUser=JSON.parse(localStorage.getItem('currentUser')||'null');
+
+// ── AUTH ───────────────────────────────────────────────
+function api(path,method,body){
+  var opts={method:method||'GET',headers:{'Content-Type':'application/json'}};
+  if(authToken) opts.headers['Authorization']='Bearer '+authToken;
+  if(body) opts.body=JSON.stringify(body);
+  return fetch(BACKEND+path,opts).then(function(r){return r.json();});
+}
+
+async function login(){
+  var email=document.getElementById('loginEmail').value;
+  var password=document.getElementById('loginPassword').value;
+  var err=document.getElementById('loginError');
+  err.style.display='none';
+  try{
+    var data=await api('/api/auth/login','POST',{email,password});
+    if(data.success){
+      authToken=data.token;
+      currentUser=data.user;
+      localStorage.setItem('authToken',authToken);
+      localStorage.setItem('currentUser',JSON.stringify(currentUser));
+      showApp();
+    } else {
+      err.textContent=data.error||'Login failed. Please check your email and password.';
+      err.style.display='block';
+    }
+  }catch(e){
+    err.textContent='Cannot connect to server. Make sure your backend is running on port 3001.';
+    err.style.display='block';
+  }
+}
+
+async function register(){
+  var name=document.getElementById('regName').value;
+  var email=document.getElementById('regEmail').value;
+  var password=document.getElementById('regPassword').value;
+  var err=document.getElementById('registerError');
+  err.style.display='none';
+  try{
+    var data=await api('/api/auth/register','POST',{name,email,password,role:'practitioner'});
+    if(data.success){
+      authToken=data.token;
+      currentUser=data.user;
+      localStorage.setItem('authToken',authToken);
+      localStorage.setItem('currentUser',JSON.stringify(currentUser));
+      showApp();
+    } else {
+      err.textContent=data.error||'Registration failed.';
+      err.style.display='block';
+    }
+  }catch(e){
+    err.textContent='Cannot connect to server. Make sure your backend is running on port 3001.';
+    err.style.display='block';
+  }
+}
+
+function logout(){
+  authToken=null;currentUser=null;
+  localStorage.removeItem('authToken');localStorage.removeItem('currentUser');
+  document.getElementById('authScreen').style.display='block';
+  document.getElementById('mainApp').style.display='none';
+  document.getElementById('userEmail').style.display='none';
+  document.getElementById('logoutBtn').style.display='none';
+  document.getElementById('authStatus').textContent='Not logged in';
+}
+
+function showApp(){
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  document.getElementById('userEmail').textContent=currentUser.email;
+  document.getElementById('userEmail').style.display='inline';
+  document.getElementById('logoutBtn').style.display='inline-block';
+  document.getElementById('authStatus').style.display='none';
+  loadSavedProfiles();
+}
+
+function showRegister(){document.getElementById('loginForm').style.display='none';document.getElementById('registerForm').style.display='block';}
+function showLogin(){document.getElementById('registerForm').style.display='none';document.getElementById('loginForm').style.display='block';}
+
+// ── HELPERS ────────────────────────────────────────────
+function tc(el){el.classList.toggle('on');}
+function chips(id){return[...document.querySelectorAll('#'+id+' .chip.on')].map(function(c){return c.textContent;});}
+function selR(el){document.querySelectorAll('.r-card').forEach(function(c){c.classList.remove('on');});el.classList.add('on');APP.retailer=el.dataset.r;}
+function selT(el){document.querySelectorAll('.tier-opt').forEach(function(c){c.classList.remove('on');});el.classList.add('on');APP.tier=el.dataset.t;}
+function selSport(el){document.querySelectorAll('.sport-card').forEach(function(c){c.classList.remove('on');});el.classList.add('on');}
+function toggleSports(v){hasSports=v;document.getElementById('hasSportsYes').classList.toggle('on',v);document.getElementById('hasSportsNo').classList.toggle('on',!v);document.getElementById('sportsFields').style.display=v?'block':'none';}
+function selSharing(el,v){document.querySelectorAll('#sharingToggle .ft-btn').forEach(function(b){b.style.background='#fff';b.style.color='#888';});el.style.background='#1D9E75';el.style.color='#fff';APP.sharingMode=v;}
+
+function ageGroup(age){
+  if(age<=2) return{label:'Toddler',cls:'ag-toddler',portion:0.35};
+  if(age<=5) return{label:'3–5',cls:'ag-child',portion:0.45};
+  if(age<=10) return{label:'6–10',cls:'ag-tween',portion:0.6};
+  if(age<=13) return{label:'11–13',cls:'ag-tween',portion:0.75};
+  return{label:'Teen',cls:'ag-teen',portion:0.85};
+}
+
+function changeKids(delta){
+  kidCount=Math.max(0,Math.min(6,kidCount+delta));
+  document.getElementById('kidCount').textContent=kidCount;
+  renderChildCards();
+}
+
+function renderChildCards(){
+  var el=document.getElementById('childCards');var existing=[];
+  el.querySelectorAll('.child-card').forEach(function(c){existing.push({name:c.querySelector('.cname').value,age:c.querySelector('.cage').value,diet:c.querySelector('.cdiet')?c.querySelector('.cdiet').value:''});});
+  var h='';
+  for(var i=0;i<kidCount;i++){
+    var prev=existing[i]||{name:'',age:'',diet:''};var ageVal=parseInt(prev.age)||6;var ag=ageGroup(ageVal);
+    h+='<div class="child-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#185FA5">C'+(i+1)+'</div><input class="cname" type="text" placeholder="Name" value="'+prev.name+'" style="flex:1;font-size:13px"/></div><span class="age-group-pill '+ag.cls+'">'+ag.label+'</span></div>';
+    h+='<div class="frow c2" style="margin-bottom:6px"><div><label>Age</label><input class="cage" type="number" placeholder="Age" value="'+(prev.age||'')+'" min="1" max="17" onchange="refreshKidCard(this)"/></div><div><label>Portion</label><input type="text" class="pfactor" value="'+Math.round(ag.portion*100)+'% adult" readonly style="background:#f5f5f0;color:#888"/></div></div>';
+    h+='<label>Dietary needs</label><input class="cdiet" type="text" placeholder="e.g. dairy-free" value="'+prev.diet+'"/></div>';
+  }
+  el.innerHTML=h;
+  document.getElementById('mealSharingCard').style.display=kidCount>0?'block':'none';
+  document.getElementById('kidsPrefsCard').style.display=kidCount>0?'block':'none';
+}
+
+function refreshKidCard(input){
+  var card=input.closest('.child-card');var age=parseInt(input.value)||6;var ag=ageGroup(age);
+  card.querySelector('.age-group-pill').className='age-group-pill '+ag.cls;
+  card.querySelector('.age-group-pill').textContent=ag.label;
+  card.querySelector('.pfactor').value=Math.round(ag.portion*100)+'% adult';
+}
+
+function getChildren(){
+  var ch=[];
+  document.querySelectorAll('.child-card').forEach(function(c,i){
+    var age=parseInt(c.querySelector('.cage').value)||6;var ag=ageGroup(age);
+    ch.push({index:i+1,name:c.querySelector('.cname').value||('Child '+(i+1)),age:age,ageGroup:ag.label,portionFactor:ag.portion,dietaryNeeds:c.querySelector('.cdiet')?c.querySelector('.cdiet').value:''});
+  });
+  return ch;
+}
+
+function goS(n){
+  if(n===4&&curStep<4) buildDayPlanner();
+  document.getElementById('s'+curStep).classList.remove('active');
+  curStep=n;document.getElementById('s'+curStep).classList.add('active');
+  for(var i=1;i<=8;i++){var el=document.getElementById('ps'+i);if(el) el.className='ps'+(i<n?' done':i===n?' act':'');}
+  window.scrollTo(0,0);
+}
+
+function swTab(name,el){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});el.classList.add('on');
+  document.querySelectorAll('.tp').forEach(function(p){p.classList.remove('on');});
+  document.getElementById('tp-'+name).classList.add('on');
+}
+
+function buildDayPlanner(){
+  var daysCount=parseInt(document.getElementById('days').value)||7;
+  var dayNames=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  var numKids=kidCount;var h='';
+  for(var i=0;i<daysCount;i++){
+    var dn=dayNames[i%7];var isWeekday=i%7<5;
+    h+='<div class="dp-card" data-d="'+dn+'"><div class="dp-day">'+dn+'</div>';
+    if(hasSports){
+      h+='<div class="dp-row"><span>Training</span><select class="train-sel"><option value="rest">Rest day</option><option value="easy">Easy session</option><option value="moderate">Moderate session</option><option value="hard">Hard session</option><option value="long">Long session</option><option value="race">Race day</option></select></div>';
+    }
+    h+='<div class="dp-row"><span>Evening</span><select class="eve-sel"><option value="normal">Home dinner</option><option value="out_evening">Eating out</option><option value="skip">Skip</option></select></div>';
+    h+='<div class="dp-row"><span>Lunch</span><select class="lunch-sel"><option value="home">At home</option><option value="shops">Out to shops</option><option value="canteen">Canteen</option><option value="packed">Packed</option><option value="skip">Skip</option></select></div>';
+    if(numKids>0){
+      h+='<div class="dp-row"><span>Kids eve</span><select class="kids-eve-sel"><option value="same">Same as adults</option><option value="separate">Own meal</option><option value="out">Eating out</option><option value="skip">Skip</option></select></div>';
+      if(isWeekday) h+='<div class="dp-row"><span>Kids lunch</span><select class="kids-lunch-sel"><option value="school">School</option><option value="packed">Packed</option><option value="home">At home</option></select></div>';
+    }
+    h+='</div>';
+  }
+  document.getElementById('dayPlanner').innerHTML=h;
+}
+
+function getDaySchedule(){
+  var cards=document.querySelectorAll('.dp-card');var sched=[];
+  cards.forEach(function(c){
+    var sels=c.querySelectorAll('select');var idx=0;
+    sched.push({day:c.dataset.d,training:hasSports?(sels[idx++]?sels[idx-1].value:'rest'):'rest',adultEvening:sels[idx]?sels[idx++].value:'normal',adultLunch:sels[idx]?sels[idx++].value:'home',kidsEvening:sels[idx]?sels[idx++].value:'same',kidsLunch:sels[idx]?sels[idx].value:'school'});
+  });
+  return sched;
+}
+
+// ── PLAN GENERATION ────────────────────────────────────
+// ── SECOND ADULT ───────────────────────────────────────
+var showAdult2=false;
+function toggleAdult2(){
+  showAdult2=!showAdult2;
+  document.getElementById('adult2fields').style.display=showAdult2?'block':'none';
+  document.getElementById('adult2toggle').textContent=showAdult2?'− Remove second adult':'+ Add second adult to this plan';
+}
+
+// ── FAVOURITES ─────────────────────────────────────────
+function toggleFavourite(btn,mealName){
+  if(!APP.favourites) APP.favourites={};
+  var isFav=APP.favourites[mealName];
+  if(isFav){
+    delete APP.favourites[mealName];
+    btn.textContent='♡';btn.classList.remove('on');
+    btn.title='Save as favourite';
+  } else {
+    APP.favourites[mealName]=true;
+    btn.textContent='♥';btn.classList.add('on');
+    btn.title='Remove from favourites';
+    btn.style.transform='scale(1.3)';
+    setTimeout(function(){btn.style.transform='';},300);
+  }
+  saveFavouritesToProfile();
+}
+
+async function saveFavouritesToProfile(){
+  if(!editingProfileId) return;
+  try{
+    await api('/api/clients/'+editingProfileId+'/favourites','PATCH',{favourites:APP.favourites});
+  }catch(e){}
+}
+
+// ── RECIPE INSTRUCTIONS ────────────────────────────────
+async function toggleRecipe(btn,panelId,mealName){
+  var panel=document.getElementById(panelId);
+  if(!panel) return;
+  if(panel.classList.contains('open')){
+    panel.classList.remove('open');
+    btn.textContent='Get recipe & instructions';
+    return;
+  }
+  btn.textContent='Hide recipe';
+  panel.classList.add('open');
+  if(panel.dataset.loaded) return;
+  panel.innerHTML='<div class="recipe-loading">Fetching recipe instructions...</div>';
+  try{
+    var familySize=1+(showAdult2?1:0)+(APP.children?APP.children.length:0);
+    var data=await api('/api/plans/recipes','POST',{
+      meals:[{name:mealName,type:''}],
+      familySize:familySize
+    });
+    if(data.success&&data.recipes){
+      panel.innerHTML=formatRecipe(mealName,data.recipes);
+      panel.dataset.loaded='1';
+    } else {
+      panel.innerHTML='<div class="recipe-loading">Could not load recipe. Please try again.</div>';
+    }
+  }catch(e){
+    panel.innerHTML='<div class="recipe-loading">Error loading recipe: '+e.message+'</div>';
+  }
+}
+
+function formatRecipe(mealName,text){
+  var escaped=text
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+  var html=escaped
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^#{1,3} (.+)$/gm,'<h4>$1</h4>')
+    .replace(/^\d+\. (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g,'<ol>$&</ol>')
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+  return '<h4>'+mealName+'</h4><p>'+html+'</p>';
+}
+
+async function startGen(){
+  APP.children=getChildren();APP.daySchedule=getDaySchedule();goS(6);
+  var selSportEl=document.querySelector('.sport-card.on');
+  APP.client={
+    fname:document.getElementById('fname').value||'Client',
+    lname:document.getElementById('lname').value||'',
+    age:parseInt(document.getElementById('age').value)||34,
+    sex:document.getElementById('sex').value||'Female',
+    activity:document.getElementById('activity').value||'Moderately active',
+    weight:parseFloat(document.getElementById('weight').value)||68,
+    tweight:parseFloat(document.getElementById('tweight').value)||65,
+    height:parseFloat(document.getElementById('height').value)||165,
+    goals:chips('goals'),diet:chips('diet'),
+    allergies:document.getElementById('allergies').value,
+    dislikes:document.getElementById('dislikes').value,
+    cooktime:document.getElementById('cooktime').value,
+    batchcook:document.getElementById('batchcook').value,
+    incSnacks:document.getElementById('incSnacks').value,
+    days:parseInt(document.getElementById('days').value),
+    mealspd:parseInt(document.getElementById('mealspd')||{value:3}).value||3,
+    workLunch:document.getElementById('workLunch').value,
+    lunchBudget:document.getElementById('lunchBudget').value,
+    notes:document.getElementById('notes').value,
+    hasAdult2:showAdult2,
+    adult2name:showAdult2?(document.getElementById('fname2').value||'Partner'):'',
+    adult2age:showAdult2?(parseInt(document.getElementById('age2').value)||34):0,
+    adult2sex:showAdult2?document.getElementById('sex2').value:'',
+    adult2weight:showAdult2?(parseFloat(document.getElementById('weight2').value)||75):0,
+    adult2height:showAdult2?(parseFloat(document.getElementById('height2').value)||170):0,
+    adult2activity:showAdult2?document.getElementById('activity2').value:'Moderately active',
+    adult2diet:showAdult2?document.getElementById('diet2').value:'',
+    favouriteMeals:APP.favourites?Object.keys(APP.favourites):[],
+    hasSports:hasSports,
+    sport:selSportEl?selSportEl.dataset.s:'None',
+    eventName:document.getElementById('eventName').value,
+    weeksToEvent:document.getElementById('weeksToEvent').value,
+    trainDays:document.getElementById('trainDays').value,
+    sessionDuration:document.getElementById('sessionDuration').value,
+    intensity:document.getElementById('intensity').value,
+    trainTime:document.getElementById('trainTime').value,
+    longDay:document.getElementById('longDay').value,
+    carbLoad:document.getElementById('carbLoad').value,
+    midFuel:document.getElementById('midFuel').value,
+    giSensitivity:document.getElementById('giSensitivity').value,
+  };
+
+  var msgs=['Calculating training-day vs rest-day macros...','Planning carbohydrate periodisation...','Building pre and post-exercise meals...','Scaling shopping quantities...','Checking micronutrient targets...'];
+  var mi=0;var iv=setInterval(function(){mi++;if(mi<msgs.length){document.getElementById('genSub').textContent=msgs[mi];}},1400);
+
+  try{
+    var data=await api('/api/plans/generate','POST',{
+      clientData:APP.client,
+      children:APP.children,
+      sharingMode:APP.sharingMode,
+      daySchedule:APP.daySchedule,
+      retailer:APP.retailer,
+      tier:APP.tier,
+      clientProfileId:editingProfileId||null
+    });
+    clearInterval(iv);
+    if(!data.success){
+      document.getElementById('genTxt').textContent='Something went wrong.';
+      document.getElementById('genSub').textContent=data.error||'Please try again.';
+      return;
+    }
+    var parsed=data.plan;
+    APP.plan=parsed.days||[];APP.shopping=parsed.shopping||{};APP.supplements=parsed.supplements||[];
+    APP.nutrients=parsed.nutrients_weekly||{};
+    APP.macros={tdee:parsed.tdee,training_kcal:parsed.training_day_kcal,rest_kcal:parsed.rest_day_kcal};
+    APP.trainingDayMacros=parsed.training_day_macros||{};APP.restDayMacros=parsed.rest_day_macros||{};
+    APP.nutrientNotes=parsed.nutrient_notes||'';APP.wasteNotes=parsed.waste_reduction_notes||[];
+    APP.batchTips=parsed.batch_cooking_tips||[];APP.familySizeNote=parsed.family_size_note||'';
+    APP.costSummary=parsed.cost_summary||{};APP.fuellingGuide=parsed.fuelling_guide||{};
+    buildViews();goS(7);
+  }catch(e){
+    clearInterval(iv);
+    document.getElementById('genTxt').textContent='Connection error.';
+    document.getElementById('genSub').textContent='Make sure your backend server is running on port 3001.';
+  }
+}
+
+// ── BUILD VIEWS ────────────────────────────────────────
+function buildViews(){
+  var c=APP.client;var m=APP.macros||{};
+  if(!APP.favourites) APP.favourites={};
+  var famStr=c.fname+(APP.children.length?' + '+APP.children.length+' child'+(APP.children.length>1?'ren':''):'');
+  document.getElementById('clientBadge').textContent=famStr+(c.goals&&c.goals.length?' · '+c.goals.join(', '):'')+(c.sport&&c.hasSports?' · '+c.sport:'');
+  var tkcal=m.training_kcal||m.tdee||0;var rkcal=m.rest_kcal||m.tdee||0;
+  document.getElementById('statGrid').innerHTML='<div class="stat"><div class="stat-v">'+Math.round(rkcal)+'</div><div class="stat-l">Rest day kcal</div></div><div class="stat"><div class="stat-v">'+Math.round(tkcal)+'</div><div class="stat-l">Training day kcal</div></div><div class="stat"><div class="stat-v">'+(APP.trainingDayMacros.protein_g||0)+'g</div><div class="stat-l">Protein (train)</div></div><div class="stat"><div class="stat-v">'+(APP.trainingDayMacros.carbs_g||0)+'g</div><div class="stat-l">Carbs (train)</div></div>';
+  document.getElementById('nb').textContent=(APP.familySizeNote||famStr)+' · Mifflin-St Jeor periodised'+(c.sport&&c.hasSports?' · '+c.sport:'')+(c.eventName?' · '+c.eventName:'');
+  buildPlan();buildFuelling();buildShop();buildCost();buildNutr();buildSupps();buildClientView();
+}
+
+function dayTypeTag(d){
+  var ts=d.training_session||'rest';
+  if(d.day_type==='race_day') return '<span class="day-tag tag-race">Race day</span>';
+  if(ts==='long'||ts==='hard') return '<span class="day-tag tag-train">Training day</span>';
+  if(ts==='moderate'||ts==='easy') return '<span class="day-tag tag-train">Training day</span>';
+  if(d.day_type==='out_evening') return '<span class="day-tag tag-out">Evening out</span>';
+  if(ts==='rest') return '<span class="day-tag tag-rest">Rest day</span>';
+  return '';
+}
+
+function timingBadge(tc){
+  if(!tc) return '';
+  if(tc==='pre-workout') return '<span class="timing-badge">Pre-workout</span>';
+  if(tc==='post-workout-recovery') return '<span class="timing-badge" style="background:#E1F5EE;color:#0F6E56">Post-workout recovery</span>';
+  return '';
+}
+
+function mealSlotHTML(m,showTick,hasKids){
+  var mealId='meal_'+Math.random().toString(36).slice(2,8);
+  var tickEl=showTick?'<div class="tick" onclick="this.classList.toggle(\'on\')"></div>':'';
+  if(m.is_out) return '<div class="meal-slot">'+tickEl+'<span class="mtype">'+m.type+'</span><div class="mname" style="color:#888;font-style:italic">'+(m.out_suggestion||'Eating out')+'</div></div>';
+  var o3=((m.omega3_mg||0)>100)?'<span class="mbadge mo">ω3 '+Math.round(m.omega3_mg)+'mg</span>':'';
+  var freezeB=m.can_freeze?'<span class="freeze-badge">Freezer-friendly</span>':'';
+  var timingB=timingBadge(m.timing_context);
+  var noteEl=m.notes?'<div style="font-size:12px;color:#888;margin-top:2px">'+m.notes+'</div>':'';
+  var kidsH='';
+  if(hasKids&&m.kids_meal&&m.kids_meal.name&&!m.shared) kidsH='<div class="kids-slot"><div style="font-size:11px;font-weight:600;color:#185FA5;margin-bottom:3px">Children</div><div style="font-size:13px">'+m.kids_meal.name+'</div>'+(m.kids_meal.notes?'<div style="font-size:12px;color:#888;margin-top:2px">'+m.kids_meal.notes+'</div>':'')+'</div>';
+  var isFav=APP.favourites&&APP.favourites[m.name];
+  var heartBtn='<button class="heart-btn'+(isFav?' on':'')+'" title="'+(isFav?'Remove from favourites':'Save as favourite')+'" onclick="toggleFavourite(this,\''+m.name.replace(/'/g,"\\'")+'\')">'+(isFav?'♥':'♡')+'</button>';
+  var recipeBtn='<button class="recipe-btn" onclick="toggleRecipe(this,\''+mealId+'\',\''+m.name.replace(/'/g,"\\'")+'\')" data-mealname="'+m.name.replace(/"/g,'&quot;')+'">Get recipe &amp; instructions</button>';
+  var recipePanel='<div class="recipe-panel" id="'+mealId+'"></div>';
+  return '<div class="meal-slot">'+tickEl+'<span class="mtype">'+m.type+'</span><div class="mname" style="flex:1">'+m.name+'<div class="macrow"><span class="mbadge mp">P '+Math.round(m.protein_g||0)+'g</span><span class="mbadge mc">C '+Math.round(m.carbs_g||0)+'g</span><span class="mbadge mf">F '+Math.round(m.fat_g||0)+'g</span>'+o3+'</div>'+timingB+freezeB+noteEl+kidsH+recipeBtn+recipePanel+'</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">'+heartBtn+'<span class="mcals">'+Math.round(m.kcal||0)+' kcal</span></div></div>';
+}
+
+function buildPlan(){
+  var hasKids=APP.children.length>0;var h='';
+  (APP.plan||[]).forEach(function(d){
+    h+='<div class="meal-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div class="meal-day">'+d.day+'</div>'+dayTypeTag(d)+'</div>';
+    (d.meals||[]).forEach(function(m){h+=mealSlotHTML(m,false,hasKids);});h+='</div>';
+  });
+  document.getElementById('planGrid').innerHTML=h||'<div class="nb">No meals generated.</div>';
+}
+
+function buildFuelling(){
+  var fg=APP.fuellingGuide||{};var c=APP.client;
+  if(!c.hasSports){document.getElementById('fuellingView').innerHTML='<div class="nb">No sports goal set. Enable sports nutrition in the profile to see fuelling guidance.</div>';return;}
+  var h='';
+  if(APP.trainingDayMacros.carbs_g){
+    h+='<div class="macro-compare"><div class="mc-card"><div class="mc-title">Training day targets</div><div class="macrow" style="gap:8px"><span class="mbadge mc" style="font-size:13px;padding:3px 10px">C '+Math.round(APP.trainingDayMacros.carbs_g||0)+'g</span><span class="mbadge mp" style="font-size:13px;padding:3px 10px">P '+Math.round(APP.trainingDayMacros.protein_g||0)+'g</span></div><div style="font-size:13px;color:#888;margin-top:8px">'+Math.round(APP.macros.training_kcal||0)+' kcal</div></div><div class="mc-card"><div class="mc-title">Rest day targets</div><div class="macrow" style="gap:8px"><span class="mbadge mc" style="font-size:13px;padding:3px 10px">C '+Math.round(APP.restDayMacros.carbs_g||0)+'g</span><span class="mbadge mp" style="font-size:13px;padding:3px 10px">P '+Math.round(APP.restDayMacros.protein_g||0)+'g</span></div><div style="font-size:13px;color:#888;margin-top:8px">'+Math.round(APP.macros.rest_kcal||0)+' kcal</div></div></div>';
+  }
+  function fuelSection(title,data,borderColor){
+    if(!data) return '';
+    var s='<div class="fuelling-card"><div class="fuelling-phase" style="color:'+borderColor+'">'+title+'</div>';
+    if(data.timing) s+='<div style="font-size:12px;color:#888;margin-bottom:6px">'+data.timing+'</div>';
+    if(data.what_to_eat) s+='<div style="font-size:14px;color:#1a1a18">'+data.what_to_eat+'</div>';
+    if(data.strategy) s+='<div style="font-size:14px;color:#1a1a18">'+data.strategy+'</div>';
+    if(data.what_to_avoid) s+='<div style="font-size:12px;color:#888;margin-top:4px">Avoid: '+data.what_to_avoid+'</div>';
+    var lists=data.example_meals||data.example_options||data.options||[];
+    if(lists.length){s+='<div style="margin-top:8px">';lists.forEach(function(l){s+='<div style="font-size:13px;padding:4px 0;border-bottom:1px solid #f0ede4;display:flex;gap:6px"><span style="color:#1D9E75;flex-shrink:0">→</span><span>'+l+'</span></div>';});s+='</div>';}
+    if(data.protein_target_g) s+='<div style="font-size:12px;color:#888;margin-top:6px">Target: '+data.protein_target_g+'g protein + '+data.carb_target_g+'g carbs within 30 mins</div>';
+    s+='</div>';return s;
+  }
+  h+='<div class="phase-section"><div class="phase-hd" style="border-left:3px solid #854F0B;border-radius:0">Pre-workout fuelling</div>'+fuelSection('Pre-workout meal (2–3 hrs before)',fg.pre_workout,'#854F0B')+'</div>';
+  h+='<div class="phase-section"><div class="phase-hd" style="border-left:3px solid #3C3489;border-radius:0">During training</div>'+fuelSection('Mid-session fuelling',fg.during_session,'#3C3489')+'</div>';
+  h+='<div class="phase-section"><div class="phase-hd" style="border-left:3px solid #0F6E56;border-radius:0">Post-workout recovery</div>'+fuelSection('Recovery window (30 mins)',fg.post_workout_30min,'#0F6E56')+fuelSection('Full recovery meal (2 hrs)',fg.post_workout_2hr,'#0F6E56')+'</div>';
+  if(fg.carb_loading&&c.carbLoad!=='none') h+='<div class="phase-section"><div class="phase-hd" style="border-left:3px solid #185FA5;border-radius:0">Carbohydrate loading</div>'+fuelSection('Carb loading protocol',fg.carb_loading,'#185FA5')+'</div>';
+  if(fg.race_day){var rd=fg.race_day;h+='<div class="phase-section"><div class="phase-hd" style="border-left:3px solid #A32D2D;border-radius:0">Race day</div><div class="fuelling-card">'+(rd.morning_meal?'<div style="font-weight:600;color:#A32D2D;font-size:12px;margin-bottom:4px">Race morning</div><div style="font-size:14px">'+rd.morning_meal+'</div>':'')+(rd.timing?'<div style="font-size:12px;color:#888;margin-top:4px">Timing: '+rd.timing+'</div>':'')+(rd.mid_race?'<div style="margin-top:10px;font-weight:600;color:#3C3489;font-size:12px;margin-bottom:4px">Mid-race</div><div style="font-size:14px">'+rd.mid_race+'</div>':'')+(rd.post_race?'<div style="margin-top:10px;font-weight:600;color:#0F6E56;font-size:12px;margin-bottom:4px">Post-race</div><div style="font-size:14px">'+rd.post_race+'</div>':'')+'</div></div>';}
+  document.getElementById('fuellingView').innerHTML=h;
+}
+
+function buildShop(){
+  var bases={'Tesco':'https://www.tesco.com/groceries/en-GB/search?query=',"Sainsbury's":'https://www.sainsburys.co.uk/gol-ui/SearchDisplayView?filters[keyword]=','Asda':'https://groceries.asda.com/search/','Waitrose':'https://www.waitrose.com/ecom/shop/search?&searchTerm=','M&S':'https://www.marksandspencer.com/c/food-and-drink?q=','Ocado':'https://www.ocado.com/search?entry=','Morrisons':'https://groceries.morrisons.com/search?entry=','Aldi':'https://www.aldi.co.uk/search?q=','Lidl':'https://www.lidl.co.uk/search?q='};
+  var base=bases[APP.retailer]||bases['Tesco'];var tier=APP.tier;
+  var h='<div class="nb">'+APP.retailer+' · '+(tier==='essentials'?'own brand':tier==='organic'?'organic/finest':'mid-range')+'</div>';
+  Object.entries(APP.shopping||{}).forEach(function(entry){
+    var cat=entry[0];var items=entry[1];if(!items||!items.length) return;
+    var catTotal=(APP.costSummary&&APP.costSummary.category_totals&&APP.costSummary.category_totals[cat])||0;
+    h+='<div class="shop-cat"><div class="scat-t"><span>'+cat+'</span>'+(catTotal>0?'<span style="font-size:13px;color:#888">~£'+catTotal.toFixed(2)+'</span>':'')+'</div>';
+    (items||[]).forEach(function(it){
+      var q=tier==='essentials'?it.item+' own brand':tier==='organic'?'organic '+it.item:it.item;
+      var price=it.estimated_price_gbp||0;
+      h+='<div class="sitem"><div class="tick" onclick="this.classList.toggle(\'on\')"></div><span style="flex:1">'+it.item+'</span>';
+      if(it.qty_note) h+='<span style="font-size:11px;color:#888;font-style:italic;margin-right:4px">'+it.qty_note+'</span>';
+      h+='<span class="sqty">'+it.qty+'</span><span class="sprice">£'+price.toFixed(2)+'</span><a class="slink" style="margin-left:6px" href="'+base+encodeURIComponent(q)+'" target="_blank">'+APP.retailer+' →</a></div>';
+    });h+='</div>';
+  });
+  document.getElementById('shopList').innerHTML=h;
+}
+
+function buildCost(){
+  var cs=APP.costSummary||{};var grand=cs.grand_total_gbp||0;var ppd=cs.per_person_per_day_gbp||0;
+  var catTotals=cs.category_totals||{};var cats=Object.keys(catTotals).filter(function(k){return catTotals[k]>0;});
+  var maxCat=cats.reduce(function(mx,k){return Math.max(mx,catTotals[k]);},0);
+  var tier=APP.tier;var tierMult={essentials:1,mid:1.35,organic:1.75};
+  var h='<div style="background:#f5f5f0;border-radius:12px;padding:1.25rem;margin-bottom:1.25rem"><div style="font-size:13px;color:#888;margin-bottom:4px">Estimated weekly shop</div><div class="cost-big">£'+grand.toFixed(2)+'</div><div style="font-size:14px;color:#888;margin-top:4px">'+APP.client.days+'-day plan</div>';
+  h+='<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap"><div><div style="font-size:12px;color:#888">Per person/day</div><div style="font-size:18px;font-weight:600">£'+ppd.toFixed(2)+'</div></div><div><div style="font-size:12px;color:#888">Monthly estimate</div><div style="font-size:18px;font-weight:600">£'+((grand/APP.client.days)*30.4).toFixed(2)+'</div></div></div></div>';
+  h+='<div class="cost-breakdown">';
+  cats.forEach(function(cat){var v=catTotals[cat]||0;var pct=maxCat>0?Math.round((v/maxCat)*100):0;h+='<div class="cost-cat"><div class="cost-cat-name">'+cat+'</div><div class="cost-cat-val">£'+v.toFixed(2)+'</div><div class="cost-bar-track"><div class="cost-bar-fill" style="width:'+pct+'%"></div></div></div>';});
+  h+='</div><div style="margin-top:1rem"><div class="sec-lbl">Tier comparison</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">';
+  Object.entries(tierMult).forEach(function(e){var name=e[0]==='essentials'?'Essentials':e[0]==='mid'?'Mid-range':'Organic';var est=grand*(e[1]/tierMult[tier]);h+='<div style="border:'+(e[0]===tier?'2px solid #1D9E75':'1px solid #e0ddd4')+';border-radius:8px;padding:10px;text-align:center"><div style="font-size:13px;color:#888">'+name+'</div><div style="font-size:20px;font-weight:600">£'+est.toFixed(2)+'</div></div>';});
+  h+='</div></div>';
+  document.getElementById('costView').innerHTML=h;
+}
+
+function buildNutr(){
+  var n=APP.nutrients||{};
+  var pct=function(v,t){return Math.min(100,Math.round((v/t)*100));};
+  var sp=function(ok){return ok?'<span class="pill pill-ok">On track</span>':'<span class="pill pill-danger">May be low</span>';};
+  var h='<div class="card"><div class="sec-lbl">Weekly nutrient progress</div>';
+  h+='<div class="mbar-wrap"><div class="mbar-lbl"><span>Omega-3 (EPA+DHA)</span><span style="font-size:12px;color:#888">'+Math.round(n.omega3_mg_total||0)+'mg / '+Math.round(n.omega3_target_mg||1750)+'mg</span></div><div class="mbar-bg"><div class="mbar-fill" style="width:'+pct(n.omega3_mg_total||0,n.omega3_target_mg||1750)+'%;background:#1D9E75"></div></div></div>';
+  h+='<div class="mbar-wrap"><div class="mbar-lbl"><span>Dietary fibre</span><span style="font-size:12px;color:#888">'+Math.round(n.fibre_g_total||0)+'g / '+Math.round(n.fibre_target_g||210)+'g</span></div><div class="mbar-bg"><div class="mbar-fill" style="width:'+pct(n.fibre_g_total||0,n.fibre_target_g||210)+'%;background:#378ADD"></div></div></div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">';
+  [['Vitamin D',n.vit_d_adequate],['Vitamin B12',n.b12_adequate],['Iron',n.iron_adequate],['Calcium',n.calcium_adequate]].forEach(function(row){h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0ede4"><span style="font-size:14px">'+row[0]+'</span>'+sp(row[1])+'</div>';});
+  h+='</div></div>';if(APP.nutrientNotes) h+='<div class="nb">'+APP.nutrientNotes+'</div>';
+  document.getElementById('nutrView').innerHTML=h;
+}
+
+function buildSupps(){
+  var supps=APP.supplements||[];
+  if(!supps.length){document.getElementById('suppsView').innerHTML='<div class="nb">No supplement recommendations needed.</div>';return;}
+  var pl={'essential':'<span class="pill pill-danger">Essential</span>','recommended':'<span class="pill pill-warn">Recommended</span>','optional':'<span class="pill pill-info">Optional</span>'};
+  var rets=[{name:'Holland & Barrett',url:'https://www.hollandandbarrett.com/search/?q='},{name:'Amazon UK',url:'https://www.amazon.co.uk/s?k='},{name:'Boots',url:'https://www.boots.com/search?q='}];
+  var h='<div class="nb">Consult a GP before starting supplements.</div>';
+  supps.forEach(function(s){
+    var term=encodeURIComponent(s.search_term||s.name);
+    h+='<div class="supp-card"><div class="supp-icon">+</div><div style="flex:1"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px"><span style="font-size:15px;font-weight:600">'+s.name+'</span>'+(pl[s.priority]||pl['optional'])+'</div><div style="font-size:13px;color:#888">'+s.reason+'</div><div class="supp-links">';
+    rets.forEach(function(r){h+='<a class="supp-link" href="'+r.url+term+'" target="_blank">'+r.name+' →</a>';});
+    h+='</div></div></div>';
+  });
+  document.getElementById('suppsView').innerHTML=h;
+}
+
+function buildClientView(){
+  var c=APP.client;var hasKids=APP.children.length>0;
+  var initials=((c.fname||'?')[0]+(c.lname||'?')[0]).toUpperCase();
+  var cs=APP.costSummary||{};
+  var h='<div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem"><div class="avatar">'+initials+'</div><div><div style="font-size:15px;font-weight:600">'+c.fname+' '+c.lname+'</div><div style="font-size:13px;color:#888">'+c.days+'-day plan</div></div></div>';
+  if(cs.grand_total_gbp) h+='<div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap"><div class="stat" style="flex:1"><div class="stat-v">£'+(cs.grand_total_gbp||0).toFixed(2)+'</div><div class="stat-l">Est. weekly shop</div></div><div class="stat" style="flex:1"><div class="stat-v">£'+(cs.per_person_per_day_gbp||0).toFixed(2)+'</div><div class="stat-l">Per person/day</div></div></div>';
+  h+='<div class="nb">Tick off each meal as you eat it.</div>';
+  (APP.plan||[]).forEach(function(d){
+    h+='<div class="meal-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div class="meal-day">'+d.day+'</div>'+dayTypeTag(d)+'</div>';
+    (d.meals||[]).forEach(function(m){h+=mealSlotHTML(m,true,hasKids);});h+='</div>';
+  });
+  h+='<div style="display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap"><button class="btn" onclick="exportIcal()">Add to calendar</button></div>';
+  document.getElementById('clientView').innerHTML=h;
+}
+
+// ── CALENDAR EXPORT ────────────────────────────────────
+function exportIcal(){
+  var days=APP.plan||[];var today=new Date();
+  var ical='BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//MealPlanPro//EN\n';
+  var fmt=function(t){return t.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';};
+  days.forEach(function(d,di){(d.meals||[]).forEach(function(m,mi){
+    if(m.is_out) return;
+    var dt=new Date(today);dt.setDate(today.getDate()+di);
+    var hrs=m.type==='Breakfast'?8:m.type==='Lunch'?13:m.type==='Dinner'?19:mi<2?10:16;
+    dt.setHours(hrs,0,0,0);var dte=new Date(dt);dte.setMinutes(30);
+    ical+='BEGIN:VEVENT\nSUMMARY:'+m.type+': '+m.name+'\nDTSTART:'+fmt(dt)+'\nDTEND:'+fmt(dte)+'\nDESCRIPTION:'+Math.round(m.kcal||0)+' kcal\nEND:VEVENT\n';
+  });});
+  ical+='END:VCALENDAR';
+  var blob=new Blob([ical],{type:'text/calendar'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=(APP.client.fname||'client')+'_meal_plan.ics';a.click();
+}
+
+// ── SAVE / LOAD PROFILES ───────────────────────────────
+async function saveProfile(){
+  try{
+    var profileData={
+      id:editingProfileId||undefined,
+      client:APP.client,children:APP.children,sharingMode:APP.sharingMode,
+      retailer:APP.retailer,tier:APP.tier,daySchedule:APP.daySchedule
+    };
+    var data=await api('/api/clients','POST',profileData);
+    if(data.success){
+      editingProfileId=data.profile.id;
+      document.getElementById('saveBtn').textContent='Saved ✓';
+      setTimeout(function(){document.getElementById('saveBtn').textContent='Save client';},2000);
+    }
+  }catch(e){
+    document.getElementById('saveBtn').textContent='Save failed';
+    setTimeout(function(){document.getElementById('saveBtn').textContent='Save client';},2000);
+  }
+}
+
+async function loadSavedProfiles(){
+  var list=document.getElementById('savedList');
+  list.innerHTML='<div style="text-align:center;padding:2rem;color:#888"><div class="spinner" style="width:20px;height:20px;border-width:2px"></div></div>';
+  try{
+    var data=await api('/api/clients');
+    if(!data.profiles||!data.profiles.length){
+      list.innerHTML='<div style="text-align:center;padding:2rem;color:#888"><div style="font-size:32px;margin-bottom:8px">○</div><div>No saved clients yet.</div><div style="margin-top:4px;font-size:13px">Create your first plan to get started.</div></div>';
+      return;
+    }
+    var h='';
+    data.profiles.forEach(function(p){
+      var initials=(p.name||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
+      var d=new Date(p.updated_at);var dateStr=d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+      var kids=p.children&&p.children.length?p.children.length+' child'+(p.children.length>1?'ren':''):'No children';
+      h+='<div class="saved-profile" onclick="loadProfile(\''+p.id+'\')"><div class="avatar">'+initials+'</div><div style="flex:1"><div style="font-size:14px;font-weight:600">'+p.name+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+(p.sport||'General health')+' · '+kids+'</div></div><div style="font-size:12px;color:#888;text-align:right;flex-shrink:0">'+dateStr+'</div><button class="btn-sm" style="margin-left:8px;color:#A32D2D;border-color:#E24B4A" onclick="deleteProfile(event,\''+p.id+'\')">Delete</button></div>';
+    });
+    list.innerHTML=h;
+  }catch(e){
+    list.innerHTML='<div class="nb">Could not load profiles. Make sure you are logged in.</div>';
+  }
+}
+
+async function loadProfile(id){
+  try{
+    var data=await api('/api/clients/'+id);
+    if(!data.profile) return;
+    var p=data.profile;
+    APP.client=p.client_data||{};APP.children=p.children||[];
+    APP.sharingMode=p.sharing_mode||'same';APP.retailer=p.retailer||'Tesco';
+    APP.tier=p.tier||'essentials';APP.daySchedule=p.day_schedule||[];
+    editingProfileId=id;
+    // If there are saved plans, load the most recent one
+    if(data.plans&&data.plans.length){
+      var latestPlanData=await api('/api/plans/'+data.plans[0].id);
+      if(latestPlanData.plan){
+        var pd=latestPlanData.plan.plan_data;
+        APP.plan=pd.days||[];APP.shopping=pd.shopping||{};
+        APP.supplements=pd.supplements||[];APP.nutrients=pd.nutrients_weekly||{};
+        APP.macros={tdee:pd.tdee,training_kcal:pd.training_day_kcal,rest_kcal:pd.rest_day_kcal};
+        APP.trainingDayMacros=pd.training_day_macros||{};APP.restDayMacros=pd.rest_day_macros||{};
+        APP.nutrientNotes=pd.nutrient_notes||'';APP.wasteNotes=pd.waste_reduction_notes||[];
+        APP.batchTips=pd.batch_cooking_tips||[];APP.familySizeNote=pd.family_size_note||'';
+        APP.costSummary=pd.cost_summary||{};APP.fuellingGuide=pd.fuelling_guide||{};
+        buildViews();
+        showPlanner();
+        document.getElementById('s'+curStep).classList.remove('active');
+        curStep=7;document.getElementById('s7').classList.add('active');
+        for(var i=1;i<=8;i++){var el=document.getElementById('ps'+i);if(el) el.className='ps'+(i<7?' done':i===7?' act':'');}
+        return;
+      }
+    }
+    // No saved plan — go to step 1 with profile pre-filled
+    populateFormFromProfile();
+    showPlanner();
+    goS(1);
+  }catch(e){alert('Could not load profile.');}
+}
+
+function populateFormFromProfile(){
+  var c=APP.client;
+  if(!c) return;
+  var fields=['fname','lname','age','height','weight','tweight','allergies','dislikes','notes'];
+  fields.forEach(function(f){var el=document.getElementById(f);if(el&&c[f]) el.value=c[f];});
+  if(c.sex) document.getElementById('sex').value=c.sex;
+  if(c.activity) document.getElementById('activity').value=c.activity;
+  if(c.cooktime) document.getElementById('cooktime').value=c.cooktime;
+  if(c.batchcook) document.getElementById('batchcook').value=c.batchcook;
+  if(c.incSnacks) document.getElementById('incSnacks').value=c.incSnacks;
+  if(c.days) document.getElementById('days').value=c.days;
+  if(c.hasAdult2){
+    showAdult2=true;
+    document.getElementById('adult2fields').style.display='block';
+    document.getElementById('adult2toggle').textContent='− Remove second adult';
+    if(c.adult2name) document.getElementById('fname2').value=c.adult2name;
+    if(c.adult2age) document.getElementById('age2').value=c.adult2age;
+    if(c.adult2sex) document.getElementById('sex2').value=c.adult2sex;
+    if(c.adult2weight) document.getElementById('weight2').value=c.adult2weight;
+    if(c.adult2height) document.getElementById('height2').value=c.adult2height;
+    if(c.adult2activity) document.getElementById('activity2').value=c.adult2activity;
+    if(c.adult2diet) document.getElementById('diet2').value=c.adult2diet;
+  }
+  if(c.favouriteMeals&&c.favouriteMeals.length){
+    APP.favourites={};
+    c.favouriteMeals.forEach(function(m){APP.favourites[m]=true;});
+  }
+}
+
+async function deleteProfile(evt,id){
+  evt.stopPropagation();
+  if(!confirm('Delete this client profile?')) return;
+  try{await api('/api/clients/'+id,'DELETE');loadSavedProfiles();}catch(e){}
+}
+
+function newPlan(){
+  editingProfileId=null;showAdult2=false;
+  APP={retailer:'Tesco',tier:'essentials',plan:[],shopping:{},supplements:[],nutrients:{},macros:{},nutrientNotes:'',wasteNotes:[],batchTips:[],client:{},children:[],sharingMode:'same',daySchedule:[],costSummary:{},fuellingGuide:{},trainingDayMacros:{},restDayMacros:{},familySizeNote:'',favourites:{}};
+  document.getElementById('adult2toggle').textContent='+ Add second adult to this plan';
+  document.getElementById('adult2fields').style.display='none';
+  showPlanner();goS(1);
+}
+
+function showPlanner(){
+  document.getElementById('homeScreen').classList.remove('active');
+  document.getElementById('plannerWrap').style.display='block';
+}
+
+function showHome(){
+  document.getElementById('plannerWrap').style.display='none';
+  document.getElementById('homeScreen').classList.add('active');
+  loadSavedProfiles();
+}
+
+// ── STARTUP ────────────────────────────────────────────
+if(authToken&&currentUser){
+  showApp();
+} else {
+  document.getElementById('authScreen').style.display='block';
+}
+</script>
+</body>
+</html>
