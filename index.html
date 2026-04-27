@@ -403,7 +403,7 @@ textarea{resize:vertical;min-height:52px}
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────
-const BACKEND = 'https://meal-plan-backend-su6p.onrender.com';
+const BACKEND = 'http://localhost:3001';
 
 // ── STATE ──────────────────────────────────────────────
 var APP={retailer:'Tesco',tier:'essentials',plan:[],shopping:{},supplements:[],nutrients:{},macros:{},nutrientNotes:'',wasteNotes:[],batchTips:[],client:{},children:[],sharingMode:'same',daySchedule:[],costSummary:{},fuellingGuide:{},trainingDayMacros:{},restDayMacros:{},familySizeNote:''};
@@ -829,23 +829,115 @@ function buildFuelling(){
   document.getElementById('fuellingView').innerHTML=h;
 }
 
+function shopUrl(retailer, itemName, tier) {
+  var q = itemName;
+  if (tier === 'essentials') {
+    if (retailer === 'Ocado') q = 'ocado own range ' + itemName;
+    else if (retailer === 'Tesco') q = 'tesco ' + itemName;
+    else if (retailer === "Sainsbury's") q = "sainsburys basics " + itemName;
+    else if (retailer === 'Asda') q = 'asda smart price ' + itemName;
+    else if (retailer === 'Waitrose') q = 'essential waitrose ' + itemName;
+    else if (retailer === 'Morrisons') q = 'morrisons savers ' + itemName;
+    else q = itemName;
+  } else if (tier === 'organic') {
+    q = 'organic ' + itemName;
+  }
+  var urls = {
+    'Ocado': 'https://www.ocado.com/search?q=' + encodeURIComponent(q) + (tier === 'organic' ? '&tags=Organic' : '') + '&sortBy=price-asc',
+    'Tesco': 'https://www.tesco.com/groceries/en-GB/search?query=' + encodeURIComponent(q),
+    "Sainsbury's": 'https://www.sainsburys.co.uk/gol-ui/SearchDisplayView?filters[keyword]=' + encodeURIComponent(q),
+    'Asda': 'https://groceries.asda.com/search/' + encodeURIComponent(q),
+    'Waitrose': 'https://www.waitrose.com/ecom/shop/search?&searchTerm=' + encodeURIComponent(q),
+    'M&S': 'https://www.marksandspencer.com/c/food-and-drink?q=' + encodeURIComponent(q),
+    'Morrisons': 'https://groceries.morrisons.com/search?entry=' + encodeURIComponent(q),
+    'Aldi': 'https://www.aldi.co.uk/search?q=' + encodeURIComponent(q),
+    'Lidl': 'https://www.lidl.co.uk/search?q=' + encodeURIComponent(q),
+  };
+  return urls[retailer] || urls['Tesco'];
+}
+
+var AISLE_ORDER = ['Produce','Protein','Dairy and alternatives','Bakery','Grains and carbs','Tins and pulses','Fats and condiments','Frozen','Snacks','Sports nutrition','Kids extras'];
+
 function buildShop(){
-  var bases={'Tesco':'https://www.tesco.com/groceries/en-GB/search?query=',"Sainsbury's":'https://www.sainsburys.co.uk/gol-ui/SearchDisplayView?filters[keyword]=','Asda':'https://groceries.asda.com/search/','Waitrose':'https://www.waitrose.com/ecom/shop/search?&searchTerm=','M&S':'https://www.marksandspencer.com/c/food-and-drink?q=','Ocado':'https://www.ocado.com/search?entry=','Morrisons':'https://groceries.morrisons.com/search?entry=','Aldi':'https://www.aldi.co.uk/search?q=','Lidl':'https://www.lidl.co.uk/search?q='};
-  var base=bases[APP.retailer]||bases['Tesco'];var tier=APP.tier;
-  var h='<div class="nb">'+APP.retailer+' · '+(tier==='essentials'?'own brand':tier==='organic'?'organic/finest':'mid-range')+'</div>';
-  Object.entries(APP.shopping||{}).forEach(function(entry){
-    var cat=entry[0];var items=entry[1];if(!items||!items.length) return;
-    var catTotal=(APP.costSummary&&APP.costSummary.category_totals&&APP.costSummary.category_totals[cat])||0;
-    h+='<div class="shop-cat"><div class="scat-t"><span>'+cat+'</span>'+(catTotal>0?'<span style="font-size:13px;color:#888">~£'+catTotal.toFixed(2)+'</span>':'')+'</div>';
-    (items||[]).forEach(function(it){
-      var q=tier==='essentials'?it.item+' own brand':tier==='organic'?'organic '+it.item:it.item;
-      var price=it.estimated_price_gbp||0;
-      h+='<div class="sitem"><div class="tick" onclick="this.classList.toggle(\'on\')"></div><span style="flex:1">'+it.item+'</span>';
-      if(it.qty_note) h+='<span style="font-size:11px;color:#888;font-style:italic;margin-right:4px">'+it.qty_note+'</span>';
-      h+='<span class="sqty">'+it.qty+'</span><span class="sprice">£'+price.toFixed(2)+'</span><a class="slink" style="margin-left:6px" href="'+base+encodeURIComponent(q)+'" target="_blank">'+APP.retailer+' →</a></div>';
-    });h+='</div>';
+  var retailer=APP.retailer;var tier=APP.tier;var shopping=APP.shopping||{};var cs=APP.costSummary||{};var grand=cs.grand_total_gbp||0;
+  var allItems=[];
+  AISLE_ORDER.forEach(function(cat){var items=shopping[cat];if(!items||!items.length) return;items.forEach(function(it){allItems.push({cat:cat,item:it});});});
+  Object.keys(shopping).forEach(function(cat){if(AISLE_ORDER.indexOf(cat)===-1){(shopping[cat]||[]).forEach(function(it){allItems.push({cat:cat,item:it});});}});
+  var tierLabel=tier==='essentials'?'Own brand / essentials':tier==='organic'?'Organic / premium':'Mid-range';
+  var isOcado=retailer==='Ocado';
+  var h='';
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">';
+  h+='<div><div style="font-size:15px;font-weight:600">'+retailer+' shopping list</div>';
+  h+='<div style="font-size:13px;color:#888;margin-top:2px">'+tierLabel+(grand>0?' · Est. £'+grand.toFixed(2)+' total':'')+'</div></div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  if(isOcado) h+='<button class="btn pri" onclick="openAllOcado()" style="font-size:13px;padding:7px 14px">🛒 Open all in Ocado</button>';
+  h+='<button class="btn" onclick="openAllRetailer()" style="font-size:13px;padding:7px 14px">Open all in '+retailer+'</button>';
+  h+='</div></div>';
+  h+='<div style="background:#f5f5f0;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#888;display:flex;align-items:center;justify-content:space-between">';
+  h+='<span id="shopProgress">0 of '+allItems.length+' items added to trolley</span>';
+  h+='<button class="btn" style="font-size:12px;padding:4px 10px" onclick="resetTicks()">Reset all</button></div>';
+  if(isOcado){
+    if(tier==='essentials') h+='<div class="nb" style="border-left:3px solid #1D9E75;border-radius:0 8px 8px 0;margin-bottom:12px">Searching <strong>Ocado Own Range</strong> — great quality at the lowest prices. Sorted by price low to high.</div>';
+    else if(tier==='organic') h+='<div class="nb" style="border-left:3px solid #185FA5;border-radius:0 8px 8px 0;margin-bottom:12px">Searching <strong>organic</strong> products on Ocado, filtered to organic range.</div>';
+    else h+='<div class="nb" style="border-left:3px solid #854F0B;border-radius:0 8px 8px 0;margin-bottom:12px">Searching <strong>mid-range</strong> products on Ocado, sorted by price.</div>';
+  }
+  var currentCat='';
+  allItems.forEach(function(entry,idx){
+    var cat=entry.cat;var it=entry.item;
+    if(cat!==currentCat){
+      if(currentCat!=='') h+='</div>';
+      var catTotal=(cs.category_totals&&cs.category_totals[cat])||0;
+      h+='<div class="shop-cat"><div class="scat-t"><span>'+cat+'</span>'+(catTotal>0?'<span style="font-size:13px;color:#888">~£'+catTotal.toFixed(2)+'</span>':'')+'</div>';
+      currentCat=cat;
+    }
+    var url=shopUrl(retailer,it.item,tier);var price=it.estimated_price_gbp||0;var itemId='si_'+idx;
+    h+='<div class="sitem" id="'+itemId+'">';
+    h+='<div class="tick" onclick="toggleShopTick(this)"></div>';
+    h+='<div style="flex:1;min-width:0"><div style="font-size:14px;color:#1a1a18">'+it.item+'</div>';
+    if(it.qty_note) h+='<div style="font-size:11px;color:#888;font-style:italic">'+it.qty_note+'</div>';
+    h+='</div>';
+    h+='<span class="sqty">'+(it.qty||'')+'</span>';
+    h+='<span class="sprice">£'+price.toFixed(2)+'</span>';
+    h+='<a class="slink" href="'+url+'" target="_blank">'+(isOcado?'🛒':retailer.split("'")[0].trim().slice(0,4)+' →')+'</a>';
+    h+='</div>';
   });
+  if(currentCat!=='') h+='</div>';
+  h+='<div class="nb" style="margin-top:1rem;font-size:12px">💡 Tap each link to open in '+retailer+', then add to your trolley. Tick items off as you go.</div>';
   document.getElementById('shopList').innerHTML=h;
+}
+
+function toggleShopTick(el){
+  el.classList.toggle('on');updateShopProgress();
+}
+
+function updateShopProgress(){
+  var ticked=document.querySelectorAll('#tp-shop .tick.on').length;
+  var total=document.querySelectorAll('#tp-shop .sitem').length;
+  var prog=document.getElementById('shopProgress');
+  if(prog){prog.textContent=ticked+' of '+total+' items added to trolley';prog.style.color=ticked===total&&total>0?'#0F6E56':'#888';}
+}
+
+function resetTicks(){
+  document.querySelectorAll('#tp-shop .tick').forEach(function(t){t.classList.remove('on');});updateShopProgress();
+}
+
+function openAllRetailer(){
+  var links=document.querySelectorAll('#tp-shop .slink');
+  if(links.length>25){if(!confirm('This will open '+links.length+' tabs. Continue?')) return;}
+  links.forEach(function(a){window.open(a.href,'_blank');});
+}
+
+function openAllOcado(){
+  var ticked=document.querySelectorAll('#tp-shop .sitem .tick.on').length;var links;
+  if(ticked>0){
+    links=[];
+    document.querySelectorAll('#tp-shop .sitem').forEach(function(row){if(!row.querySelector('.tick.on')){var a=row.querySelector('.slink');if(a) links.push(a.href);}});
+    if(!confirm('Open '+links.length+' remaining items in Ocado?')) return;
+  } else {
+    links=[...document.querySelectorAll('#tp-shop .slink')].map(function(a){return a.href;});
+    if(links.length>25&&!confirm('Open all '+links.length+' items in Ocado?')) return;
+  }
+  links.forEach(function(url){window.open(url,'_blank');});
 }
 
 function buildCost(){
