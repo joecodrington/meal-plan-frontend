@@ -845,17 +845,19 @@ function buildFuelling(){
 }
 
 function shopUrl(retailer, itemName, tier) {
-  var q = itemName;
+  // Remove anything in brackets and clean up the search term
+  var cleanName = itemName.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim();
+  var q = cleanName;
   if (tier === 'essentials') {
-    if (retailer === 'Ocado') q = 'ocado own range ' + itemName;
-    else if (retailer === 'Tesco') q = 'tesco ' + itemName;
-    else if (retailer === "Sainsbury's") q = "sainsburys basics " + itemName;
-    else if (retailer === 'Asda') q = 'asda smart price ' + itemName;
-    else if (retailer === 'Waitrose') q = 'essential waitrose ' + itemName;
-    else if (retailer === 'Morrisons') q = 'morrisons savers ' + itemName;
-    else q = itemName;
+    if (retailer === 'Ocado') q = 'ocado own range ' + cleanName;
+    else if (retailer === 'Tesco') q = 'tesco ' + cleanName;
+    else if (retailer === "Sainsbury's") q = "sainsburys basics " + cleanName;
+    else if (retailer === 'Asda') q = 'asda smart price ' + cleanName;
+    else if (retailer === 'Waitrose') q = 'essential waitrose ' + cleanName;
+    else if (retailer === 'Morrisons') q = 'morrisons savers ' + cleanName;
+    else q = cleanName;
   } else if (tier === 'organic') {
-    q = 'organic ' + itemName;
+    q = 'organic ' + cleanName;
   }
   var urls = {
     'Ocado': 'https://www.ocado.com/search?q=' + encodeURIComponent(q) + (tier === 'organic' ? '&tags=Organic' : '') + '&sortBy=price-asc',
