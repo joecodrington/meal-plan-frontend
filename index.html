@@ -924,7 +924,7 @@ function resetTicks(){
 function openAllRetailer(){
   var links=document.querySelectorAll('#tp-shop .slink');
   if(links.length>25){if(!confirm('This will open '+links.length+' tabs. Continue?')) return;}
-  links.forEach(function(a){window.open(a.href,'_blank');});
+  links.forEach(function(url,i){setTimeout(function(){window.open(url,'_blank');},i*300);});
 }
 
 function openAllOcado(){
@@ -937,7 +937,7 @@ function openAllOcado(){
     links=[...document.querySelectorAll('#tp-shop .slink')].map(function(a){return a.href;});
     if(links.length>25&&!confirm('Open all '+links.length+' items in Ocado?')) return;
   }
-  links.forEach(function(url){window.open(url,'_blank');});
+  links.forEach(function(url){setTimeout(function(){window.open(url,'_blank');},i*300);})
 }
 
 function buildCost(){
