@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meal Plan Pro</title>
 <style>
@@ -735,20 +738,41 @@ function pickSwap(el) {
 
 function approvePlan() {
   planApproved = true;
+  // Update approve bar
   var bar = document.getElementById('approveBar');
   if (bar) {
     bar.style.background = '#E1F5EE';
-    bar.innerHTML = '<div style="font-size:14px;color:#0F6E56"><strong>Plan approved.</strong> Shopping list, cost and nutrients generated from your finalised meals.</div>';
+    bar.style.borderColor = '#1D9E75';
+    bar.innerHTML = '<div style="font-size:14px;color:#0F6E56"><strong>&#10003; Plan approved.</strong> Shopping list generated from your finalised meals.</div>';
   }
+  // Unlock all tabs — remove inline styles completely
   ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id) {
     var t = document.getElementById(id);
-    if (t) { t.style.color = ''; t.style.pointerEvents = ''; }
+    if (t) {
+      t.removeAttribute('style');
+      t.onclick = function() { swTab('shop', this); };
+    }
   });
-  buildShop(); buildCost(); buildNutr(); buildSupps();
+  // Fix individual onclick handlers
+  var ts = document.getElementById('tab-shop');
+  var tc = document.getElementById('tab-cost');
+  var tn = document.getElementById('tab-nutr');
+  var tsu = document.getElementById('tab-supps');
+  if(ts) ts.onclick = function(){ swTab('shop', this); };
+  if(tc) tc.onclick = function(){ swTab('cost', this); };
+  if(tn) tn.onclick = function(){ swTab('nutr', this); };
+  if(tsu) tsu.onclick = function(){ swTab('supps', this); };
+  // Build all deferred views
+  buildShop();
+  buildCost();
+  buildNutr();
+  buildSupps();
+  // Switch to shopping tab
   document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('on'); });
-  document.getElementById('tab-shop').classList.add('on');
   document.querySelectorAll('.tp').forEach(function(p) { p.classList.remove('on'); });
-  document.getElementById('tp-shop').classList.add('on');
+  if(ts) ts.classList.add('on');
+  var shopPanel = document.getElementById('tp-shop');
+  if(shopPanel) shopPanel.classList.add('on');
 }
 
 // ── SECOND ADULT ───────────────────────────────────────
