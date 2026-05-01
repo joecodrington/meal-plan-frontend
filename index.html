@@ -678,28 +678,34 @@ function openSwap(btn) {
   document.getElementById('swapModalBody').innerHTML = '<div style="color:#888;font-size:13px;padding:1rem 0">Finding alternatives...</div>';
   document.getElementById('swapModal').style.display = 'flex';
   var c = APP.client || {};
-  var familySize = 1 + (showAdult2 ? 1 : 0) + (APP.children ? APP.children.length : 0);
-  var prompt = 'Suggest 4 alternative ' + mealType + ' meal options to replace "' + swapOldName + '". Dietary: ' + (c.diet||[]).join(', ') + ', dislikes: ' + (c.dislikes||'none') + '. Format: 1. Meal name - brief description (approx kcal).';
-  api('/api/plans/recipes', 'POST', { meals: [{ name: prompt, type: mealType }], familySize: familySize })
+  // Use the swap endpoint which returns clean meal names
+  var swapPayload = {
+    currentMeal: swapOldName,
+    mealType: mealType,
+    clientData: c,
+    children: APP.children || []
+  };
+  api('/api/plans/swap', 'POST', swapPayload)
     .then(function(data) {
-      if (!data.success) { document.getElementById('swapModalBody').innerHTML = '<div style="color:#888;font-size:13px">Could not load options.</div>'; return; }
-      var lines = (data.recipes || '').split('\n').filter(function(l) { return /^[0-9]+\./.test(l.trim()); });
-      if (!lines.length) lines = (data.recipes || '').split('\n').filter(function(l) { return l.trim().length > 5; }).slice(0, 4);
+      if (!data.success || !data.alternatives) {
+        document.getElementById('swapModalBody').innerHTML = '<div style="color:#888;font-size:13px">Could not load alternatives. Please try again.</div>';
+        return;
+      }
       var h = '';
-      lines.slice(0, 4).forEach(function(line) {
-        var clean = line.replace(/^[0-9]+\.\s*/, '').trim();
-        if (!clean) return;
-        var name = clean.split(' - ')[0].split(':')[0].split('(')[0].trim();
-        h += '<div class="swap-opt" onclick="pickSwap(this)" data-name="' + name.replace(/"/g,'') + '">';
-        h += '<span style="flex:1">' + clean + '</span>';
-        h += '<span style="color:#1D9E75;font-weight:600;margin-left:8px">Use this</span>';
+      (data.alternatives || []).forEach(function(alt) {
+        h += '<div class="swap-opt" onclick="pickSwap(this)" data-name="' + (alt.name||'').replace(/"/g,'&quot;') + '">';
+        h += '<div style="flex:1"><div style="font-weight:500;color:#1a1a18">' + alt.name + '</div>';
+        if(alt.description) h += '<div style="font-size:12px;color:#888;margin-top:2px">' + alt.description + '</div>';
+        if(alt.kcal) h += '<div style="font-size:12px;color:#1D9E75;margin-top:2px">~' + alt.kcal + ' kcal</div>';
+        h += '</div>';
+        h += '<span style="color:#1D9E75;font-weight:600;margin-left:12px;flex-shrink:0">Use this</span>';
         h += '</div>';
       });
-      if (!h) h = '<div style="color:#888;font-size:13px">No alternatives found.</div>';
-      h += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e0ddd4"><button class="btn" onclick="closeSwapModal()">Keep original</button></div>';
+      if (!h) h = '<div style="color:#888;font-size:13px">No alternatives found. Try again.</div>';
+      h += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e0ddd4"><button class="btn" onclick="closeSwapModal()">Keep original meal</button></div>';
       document.getElementById('swapModalBody').innerHTML = h;
     }).catch(function() {
-      document.getElementById('swapModalBody').innerHTML = '<div style="color:#888;font-size:13px">Error loading alternatives.</div>';
+      document.getElementById('swapModalBody').innerHTML = '<div style="color:#888;font-size:13px">Error loading alternatives. Please try again.</div>';
     });
 }
 
@@ -1306,6 +1312,12 @@ async function loadProfile(id){
         APP.batchTips=pd.batch_cooking_tips||[];APP.familySizeNote=pd.family_size_note||'';
         APP.costSummary=pd.cost_summary||{};APP.fuellingGuide=pd.fuelling_guide||{};
         buildViews();
+        // Auto-approve saved plans — they were already reviewed
+        planApproved = true;
+        buildShop(); buildCost(); buildNutr(); buildSupps();
+        var bar = document.getElementById('approveBar');
+        if(bar){ bar.style.background='#E1F5EE'; bar.style.borderColor='#1D9E75'; bar.innerHTML='<div style="font-size:14px;color:#0F6E56"><strong>&#10003; Saved plan loaded.</strong> Edit or regenerate to create a new plan.</div>'; }
+        ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id){ var t=document.getElementById(id); if(t){t.removeAttribute('style');} });
         showPlanner();
         document.getElementById('s'+curStep).classList.remove('active');
         curStep=7;document.getElementById('s7').classList.add('active');
