@@ -936,7 +936,11 @@ async function startGen(){
     APP.nutrientNotes=parsed.nutrient_notes||'';APP.wasteNotes=parsed.waste_reduction_notes||[];
     APP.batchTips=parsed.batch_cooking_tips||[];APP.familySizeNote=parsed.family_size_note||'';
     APP.costSummary=parsed.cost_summary||{};APP.fuellingGuide=parsed.fuelling_guide||{};
-    buildViews();goS(7);
+    showPlanner();
+    document.getElementById('s'+curStep).classList.remove('active');
+    curStep=7;document.getElementById('s7').classList.add('active');
+    for(var i=1;i<=8;i++){var el=document.getElementById('ps'+i);if(el) el.className='ps'+(i<7?' done':i===7?' act':'');}
+    buildViews();
   }catch(e){
     clearInterval(iv);
     document.getElementById('genTxt').textContent='Connection error.';
@@ -1316,17 +1320,19 @@ async function loadProfile(id){
         APP.nutrientNotes=pd.nutrient_notes||'';APP.wasteNotes=pd.waste_reduction_notes||[];
         APP.batchTips=pd.batch_cooking_tips||[];APP.familySizeNote=pd.family_size_note||'';
         APP.costSummary=pd.cost_summary||{};APP.fuellingGuide=pd.fuelling_guide||{};
-        buildViews();
-        // Auto-approve saved plans — they were already reviewed
-        planApproved = true;
-        buildShop(); buildCost(); buildNutr(); buildSupps();
-        var bar = document.getElementById('approveBar');
-        if(bar){ bar.style.background='#E1F5EE'; bar.style.borderColor='#1D9E75'; bar.innerHTML='<div style="font-size:14px;color:#0F6E56"><strong>&#10003; Saved plan loaded.</strong> Edit or regenerate to create a new plan.</div>'; }
-        ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id){ var t=document.getElementById(id); if(t){t.classList.remove('locked-tab');t.classList.add('unlocked');} });
+        // MUST show planner first so all HTML elements exist before buildViews writes to them
         showPlanner();
         document.getElementById('s'+curStep).classList.remove('active');
         curStep=7;document.getElementById('s7').classList.add('active');
         for(var i=1;i<=8;i++){var el=document.getElementById('ps'+i);if(el) el.className='ps'+(i<7?' done':i===7?' act':'');}
+        // Now build views — elements exist in the DOM
+        buildViews();
+        // Auto-approve — unlock tabs and build deferred sections
+        planApproved = true;
+        ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id){ var t=document.getElementById(id); if(t){t.classList.remove('locked-tab');t.classList.add('unlocked');} });
+        buildShop(); buildCost(); buildNutr(); buildSupps();
+        var bar = document.getElementById('approveBar');
+        if(bar){ bar.style.background='#E1F5EE'; bar.style.borderColor='#1D9E75'; bar.innerHTML='<div style="font-size:14px;color:#0F6E56"><strong>&#10003; Saved plan loaded.</strong> Edit or regenerate to create a new plan.</div>'; }
         return;
       }
     }
