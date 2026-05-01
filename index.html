@@ -751,6 +751,9 @@ function pickSwap(el) {
 
 function approvePlan() {
   planApproved = true;
+  console.log('approvePlan called. APP.shopping keys:', Object.keys(APP.shopping||{}));
+  console.log('APP.costSummary:', APP.costSummary);
+  console.log('APP.plan days:', (APP.plan||[]).length);
   // Update approve bar
   var bar = document.getElementById('approveBar');
   if (bar) {
@@ -937,8 +940,9 @@ async function startGen(){
     APP.batchTips=parsed.batch_cooking_tips||[];APP.familySizeNote=parsed.family_size_note||'';
     APP.costSummary=parsed.cost_summary||{};APP.fuellingGuide=parsed.fuelling_guide||{};
     showPlanner();
-    document.getElementById('s'+curStep).classList.remove('active');
-    curStep=7;document.getElementById('s7').classList.add('active');
+    document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
+    document.getElementById('s7').classList.add('active');
+    curStep=7;
     for(var i=1;i<=8;i++){var el=document.getElementById('ps'+i);if(el) el.className='ps'+(i<7?' done':i===7?' act':'');}
     buildViews();
   }catch(e){
@@ -1076,9 +1080,14 @@ var AISLE_ORDER = ['Produce','Protein','Dairy and alternatives','Bakery','Grains
 
 function buildShop(){
   var retailer=APP.retailer;var tier=APP.tier;var shopping=APP.shopping||{};var cs=APP.costSummary||{};var grand=cs.grand_total_gbp||0;
+  console.log('buildShop called. Shopping keys:', Object.keys(shopping), 'grand:', grand);
   var allItems=[];
   AISLE_ORDER.forEach(function(cat){var items=shopping[cat];if(!items||!items.length) return;items.forEach(function(it){allItems.push({cat:cat,item:it});});});
   Object.keys(shopping).forEach(function(cat){if(AISLE_ORDER.indexOf(cat)===-1){(shopping[cat]||[]).forEach(function(it){allItems.push({cat:cat,item:it});});}});
+  if(!allItems.length){
+    document.getElementById('shopList').innerHTML='<div class="nb" style="text-align:center;padding:2rem">No shopping items found. Try regenerating the plan.</div>';
+    return;
+  }
   var tierLabel=tier==='essentials'?'Own brand / essentials':tier==='organic'?'Organic / premium':'Mid-range';
   var isOcado=retailer==='Ocado';
   var h='';
@@ -1320,19 +1329,22 @@ async function loadProfile(id){
         APP.nutrientNotes=pd.nutrient_notes||'';APP.wasteNotes=pd.waste_reduction_notes||[];
         APP.batchTips=pd.batch_cooking_tips||[];APP.familySizeNote=pd.family_size_note||'';
         APP.costSummary=pd.cost_summary||{};APP.fuellingGuide=pd.fuelling_guide||{};
-        // MUST show planner first so all HTML elements exist before buildViews writes to them
+        // Step 1: show the planner wrap
         showPlanner();
-        document.getElementById('s'+curStep).classList.remove('active');
-        curStep=7;document.getElementById('s7').classList.add('active');
+        // Step 2: deactivate current step, activate s7 so its elements are visible
+        document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
+        document.getElementById('s7').classList.add('active');
+        curStep=7;
         for(var i=1;i<=8;i++){var el=document.getElementById('ps'+i);if(el) el.className='ps'+(i<7?' done':i===7?' act':'');}
-        // Now build views — elements exist in the DOM
+        // Step 3: now all elements exist and are visible — build views
         buildViews();
-        // Auto-approve — unlock tabs and build deferred sections
+        // Step 4: auto-approve — unlock tabs and build shopping/cost/nutrients/supplements
         planApproved = true;
         ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id){ var t=document.getElementById(id); if(t){t.classList.remove('locked-tab');t.classList.add('unlocked');} });
         buildShop(); buildCost(); buildNutr(); buildSupps();
         var bar = document.getElementById('approveBar');
         if(bar){ bar.style.background='#E1F5EE'; bar.style.borderColor='#1D9E75'; bar.innerHTML='<div style="font-size:14px;color:#0F6E56"><strong>&#10003; Saved plan loaded.</strong> Edit or regenerate to create a new plan.</div>'; }
+        window.scrollTo(0,0);
         return;
       }
     }
