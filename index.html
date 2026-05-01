@@ -166,6 +166,16 @@ textarea{resize:vertical;min-height:52px}
 .ft-btn{flex:1;padding:8px 10px;font-size:13px;cursor:pointer;border:none;background:#fff;color:#888;text-align:center}
 .ft-btn.on{background:#1D9E75;color:#fff}
 .waste-card{background:#fff;border:1px solid #e0ddd4;border-radius:12px;padding:1rem;margin-bottom:8px}
+.swap-btn{font-size:12px;color:#854F0B;background:none;border:none;cursor:pointer;padding:3px 0;text-decoration:underline;text-underline-offset:2px;margin-top:2px;display:block}
+.swap-btn:hover{color:#5A3300}
+.swap-panel{display:none;margin-top:10px;background:#FAEEDA;border-radius:8px;padding:12px 14px;border-left:3px solid #BA7517}
+.swap-panel.open{display:block}
+.swap-option{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5e8c8;font-size:13px;cursor:pointer}
+.swap-option:last-child{border-bottom:none}
+.swap-option:hover{color:#854F0B}
+.approve-bar{background:#E1F5EE;border:1px solid #5DCAA5;border-radius:12px;padding:14px 16px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.approve-bar-text{font-size:14px;color:#0F6E56}
+.approve-bar-text strong{font-weight:600}
 </style>
 </head>
 <body>
@@ -253,7 +263,24 @@ textarea{resize:vertical;min-height:52px}
         <div><label>Height (cm)</label><input type="number" id="height2" placeholder="178"/></div>
         <div><label>Activity level</label><select id="activity2"><option>Sedentary</option><option>Lightly active</option><option selected>Moderately active</option><option>Very active</option></select></div>
       </div>
-      <div><label>Any different dietary needs or allergies</label><input type="text" id="diet2" placeholder="e.g. nut allergy, dairy-free, vegan"/></div>
+      <div class="frow c2">
+        <div><label>Meals per day</label><select id="mealspd2"><option value="2">2 meals</option><option value="3" selected>3 meals</option><option value="4">4 meals</option><option value="5">5 meals + snacks</option></select></div>
+        <div><label>Any different dietary needs or allergies</label><input type="text" id="diet2" placeholder="e.g. nut allergy, dairy-free, vegan"/></div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="sec-lbl" style="margin-bottom:6px">Does your partner have a sports goal?</div>
+        <div style="display:flex;gap:0;border:1px solid #d0cdc4;border-radius:8px;overflow:hidden;margin-bottom:8px" id="adult2SportsToggle">
+          <div class="ft-btn" id="adult2SportsNo" onclick="toggleAdult2Sports(false)" style="background:#1D9E75;color:#fff">No — general health</div>
+          <div class="ft-btn" id="adult2SportsYes" onclick="toggleAdult2Sports(true)">Yes — training for something</div>
+        </div>
+        <div id="adult2SportsFields" style="display:none">
+          <div class="frow c3">
+            <div><label>Sport</label><input type="text" id="sport2" placeholder="e.g. cycling, swimming"/></div>
+            <div><label>Training days/week</label><select id="trainDays2"><option value="2">2 days</option><option value="3" selected>3 days</option><option value="4">4 days</option><option value="5">5 days</option></select></div>
+            <div><label>Intensity</label><select id="intensity2"><option value="easy">Easy</option><option value="moderate" selected>Moderate</option><option value="hard">Hard</option></select></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="card"><div class="sec-lbl">Health goals</div>
@@ -267,7 +294,8 @@ textarea{resize:vertical;min-height:52px}
   <div class="card">
     <div class="sec-lbl">Preferences &amp; plan settings</div>
     <div class="frow c2"><div><label>Foods they dislike</label><input type="text" id="dislikes" placeholder="e.g. mushrooms, liver"/></div><div><label>Cooking time</label><select id="cooktime"><option value="">No preference</option><option>Under 20 mins</option><option>Up to 30 mins</option><option>Up to 1 hour</option><option>Meal prep friendly</option></select></div></div>
-    <div class="frow c3"><div><label>Batch cooking</label><select id="batchcook"><option value="yes">Yes</option><option value="no">No</option><option value="some">Some meals</option></select></div><div><label>Snacks</label><select id="incSnacks"><option value="yes">Yes, 2/day</option><option value="one">Yes, 1/day</option><option value="no">No</option></select></div><div><label>Plan days</label><select id="days"><option>3</option><option>5</option><option selected>7</option><option>14</option></select></div></div>
+    <div class="frow c2"><div><label>Meals per day</label><select id="mealspd"><option value="2">2 meals</option><option value="3" selected>3 meals</option><option value="4">4 meals</option><option value="5">5 meals + snacks</option></select></div><div><label>Snacks (in addition)</label><select id="incSnacks"><option value="yes">Yes, 2/day</option><option value="one">Yes, 1/day</option><option value="no">No</option></select></div></div>
+    <div class="frow c2"><div><label>Batch cooking</label><select id="batchcook"><option value="yes">Yes</option><option value="no">No</option><option value="some">Some meals</option></select></div><div><label>Plan days</label><select id="days"><option>3</option><option>5</option><option selected>7</option><option>14</option></select></div></div>
     <div class="frow c1"><label>Additional notes</label><textarea id="notes" placeholder="e.g. works shifts, has young children, training for a marathon..."></textarea></div>
   </div>
   <div class="brow"><button class="btn pri" onclick="goS(2)">Next: sports goal →</button></div>
@@ -390,13 +418,17 @@ textarea{resize:vertical;min-height:52px}
   </div>
   <div class="stat-grid" id="statGrid"></div>
   <div class="nb" id="nb"></div>
+  <div class="approve-bar" id="approveBar">
+    <div class="approve-bar-text"><strong>Review your meal plan.</strong> Swap any meals you don't like, then approve to generate your shopping list.</div>
+    <button class="btn pri" onclick="approvePlan()">✓ Approve plan &amp; generate shopping list</button>
+  </div>
   <div class="tab-row">
     <div class="tab on" onclick="swTab('plan',this)">Meal plan</div>
     <div class="tab" onclick="swTab('fuelling',this)">Fuelling guide</div>
-    <div class="tab" onclick="swTab('shop',this)">Shopping</div>
-    <div class="tab" onclick="swTab('cost',this)">Cost</div>
-    <div class="tab" onclick="swTab('nutr',this)">Nutrients</div>
-    <div class="tab" onclick="swTab('supps',this)">Supplements</div>
+    <div class="tab" id="tab-shop" onclick="swTab('shop',this)" style="color:#ccc;pointer-events:none">Shopping</div>
+    <div class="tab" id="tab-cost" onclick="swTab('cost',this)" style="color:#ccc;pointer-events:none">Cost</div>
+    <div class="tab" id="tab-nutr" onclick="swTab('nutr',this)" style="color:#ccc;pointer-events:none">Nutrients</div>
+    <div class="tab" id="tab-supps" onclick="swTab('supps',this)" style="color:#ccc;pointer-events:none">Supplements</div>
     <div class="tab" onclick="swTab('client',this)">Client view</div>
   </div>
   <div class="tp on" id="tp-plan"><div class="day-grid" id="planGrid"></div></div>
@@ -605,10 +637,19 @@ function getDaySchedule(){
 // ── PLAN GENERATION ────────────────────────────────────
 // ── SECOND ADULT ───────────────────────────────────────
 var showAdult2=false;
+var showAdult2Sports=false;
 function toggleAdult2(){
   showAdult2=!showAdult2;
   document.getElementById('adult2fields').style.display=showAdult2?'block':'none';
   document.getElementById('adult2toggle').textContent=showAdult2?'− Remove second adult':'+ Add second adult to this plan';
+}
+function toggleAdult2Sports(v){
+  showAdult2Sports=v;
+  document.getElementById('adult2SportsNo').style.background=v?'#fff':'#1D9E75';
+  document.getElementById('adult2SportsNo').style.color=v?'#888':'#fff';
+  document.getElementById('adult2SportsYes').style.background=v?'#1D9E75':'#fff';
+  document.getElementById('adult2SportsYes').style.color=v?'#fff':'#888';
+  document.getElementById('adult2SportsFields').style.display=v?'block':'none';
 }
 
 // ── FAVOURITES ─────────────────────────────────────────
@@ -681,6 +722,111 @@ function formatRecipe(mealName,text){
   return '<h4>'+mealName+'</h4><p>'+html+'</p>';
 }
 
+// ── MEAL SWAP ──────────────────────────────────────────
+var planApproved = false;
+
+async function toggleSwap(btn, panelId, mealName, mealType) {
+  var panel = document.getElementById(panelId);
+  if (!panel) return;
+  if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    btn.textContent = '↻ Swap this meal';
+    return;
+  }
+  btn.textContent = 'Loading alternatives...';
+  panel.classList.add('open');
+  if (panel.dataset.loaded) { btn.textContent = '✕ Cancel swap'; return; }
+  panel.innerHTML = '<div style="font-size:13px;color:#888;padding:4px 0">Finding alternatives...</div>';
+  try {
+    var c = APP.client || {};
+    var familySize = 1 + (showAdult2 ? 1 : 0) + (APP.children ? APP.children.length : 0);
+    var data = await api('/api/plans/recipes', 'POST', {
+      meals: [{ name: 'SWAP REQUEST: suggest 4 alternative ' + mealType + ' options that are different from "' + mealName + '". Client profile: ' + (c.goals||[]).join(', ') + ', dietary: ' + (c.diet||[]).join(', ') + ', dislikes: ' + (c.dislikes||'none') + '. For each option give: name, brief description, estimated kcal. Format as a simple numbered list.', type: mealType }],
+      familySize: familySize
+    });
+    if (data.success && data.recipes) {
+      var lines = data.recipes.split('
+').filter(function(l) { return l.trim().match(/^\d+\./); });
+      if (!lines.length) lines = data.recipes.split('
+').filter(function(l) { return l.trim().length > 5; }).slice(0, 4);
+      var h = '<div style="font-size:12px;font-weight:600;color:#854F0B;margin-bottom:6px">Choose a replacement:</div>';
+      lines.slice(0, 4).forEach(function(line) {
+        var clean = line.replace(/^\d+\.\s*/, '').trim();
+        if (!clean) return;
+        h += '<div class="swap-option" onclick="confirmSwap(this,'' + panelId + '','' + mealName.replace(/'/g, "\'") + '','' + clean.split(' — ')[0].split(':')[0].trim().replace(/'/g, "\'") + '')">';
+        h += '<span>' + clean + '</span><span style="color:#1D9E75;font-weight:600;margin-left:8px">→ Use this</span></div>';
+      });
+      h += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #f5e8c8"><button class="btn" style="font-size:12px;padding:4px 12px" onclick="toggleSwap(document.querySelector('[onclick*=\\'' + panelId + '\\']'),'' + panelId + '','' + mealName.replace(/'/g, "\'") + '','' + mealType + '')">Keep original</button></div>';
+      panel.innerHTML = h;
+      panel.dataset.loaded = '1';
+      btn.textContent = '✕ Cancel swap';
+    } else {
+      panel.innerHTML = '<div style="font-size:13px;color:#888">Could not load alternatives. Try again.</div>';
+      btn.textContent = '↻ Swap this meal';
+    }
+  } catch(e) {
+    panel.innerHTML = '<div style="font-size:13px;color:#888">Error loading alternatives.</div>';
+    btn.textContent = '↻ Swap this meal';
+  }
+}
+
+function confirmSwap(optionEl, panelId, oldMeal, newMeal) {
+  // Find the meal slot and update the name
+  var panel = document.getElementById(panelId);
+  if (!panel) return;
+  var slot = panel.closest('.meal-slot');
+  if (!slot) return;
+  var nameEl = slot.querySelector('.mname');
+  if (nameEl) {
+    // Update the meal name display
+    var firstTextNode = nameEl.childNodes[0];
+    if (firstTextNode && firstTextNode.nodeType === 3) {
+      firstTextNode.textContent = newMeal;
+    } else {
+      nameEl.insertBefore(document.createTextNode(newMeal), nameEl.firstChild);
+    }
+    // Mark as swapped
+    var swapBadge = document.createElement('span');
+    swapBadge.style.cssText = 'font-size:11px;background:#FAEEDA;color:#854F0B;padding:1px 7px;border-radius:10px;margin-left:6px';
+    swapBadge.textContent = 'Swapped';
+    nameEl.insertBefore(swapBadge, nameEl.firstChild.nextSibling || null);
+  }
+  // Update APP.plan data
+  APP.plan.forEach(function(day) {
+    (day.meals || []).forEach(function(meal) {
+      if (meal.name === oldMeal) meal.name = newMeal;
+    });
+  });
+  // Close panel
+  panel.classList.remove('open');
+  panel.dataset.loaded = '';
+  var btn = document.querySelector('[onclick*="' + panelId + '"]');
+  if (btn && btn.classList.contains('swap-btn')) btn.textContent = '✓ Swapped';
+}
+
+// ── APPROVE PLAN ────────────────────────────────────────
+function approvePlan() {
+  planApproved = true;
+  // Hide approve bar
+  var bar = document.getElementById('approveBar');
+  if (bar) { bar.innerHTML = '<div class="approve-bar-text">✓ <strong>Plan approved.</strong> Shopping list, cost and nutrients generated from your finalised meals.</div>'; bar.style.background = '#E1F5EE'; bar.style.borderColor = '#1D9E75'; }
+  // Unlock tabs
+  ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id) {
+    var tab = document.getElementById(id);
+    if (tab) { tab.style.color = ''; tab.style.pointerEvents = ''; }
+  });
+  // Build the deferred views
+  buildShop();
+  buildCost();
+  buildNutr();
+  buildSupps();
+  // Switch to shopping tab
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('on'); });
+  document.getElementById('tab-shop').classList.add('on');
+  document.querySelectorAll('.tp').forEach(function(p) { p.classList.remove('on'); });
+  document.getElementById('tp-shop').classList.add('on');
+}
+
 async function startGen(){
   APP.children=getChildren();APP.daySchedule=getDaySchedule();goS(6);
   var selSportEl=document.querySelector('.sport-card.on');
@@ -700,7 +846,7 @@ async function startGen(){
     batchcook:document.getElementById('batchcook').value,
     incSnacks:document.getElementById('incSnacks').value,
     days:parseInt(document.getElementById('days').value),
-    mealspd:parseInt(document.getElementById('mealspd')||{value:3}).value||3,
+    mealspd:parseInt(document.getElementById('mealspd').value)||3,
     workLunch:document.getElementById('workLunch').value,
     lunchBudget:document.getElementById('lunchBudget').value,
     notes:document.getElementById('notes').value,
@@ -712,6 +858,11 @@ async function startGen(){
     adult2height:showAdult2?(parseFloat(document.getElementById('height2').value)||170):0,
     adult2activity:showAdult2?document.getElementById('activity2').value:'Moderately active',
     adult2diet:showAdult2?document.getElementById('diet2').value:'',
+    adult2mealspd:showAdult2?(parseInt(document.getElementById('mealspd2').value)||3):3,
+    adult2hasSports:showAdult2&&showAdult2Sports,
+    adult2sport:showAdult2&&showAdult2Sports?document.getElementById('sport2').value:'',
+    adult2trainDays:showAdult2&&showAdult2Sports?document.getElementById('trainDays2').value:'3',
+    adult2intensity:showAdult2&&showAdult2Sports?document.getElementById('intensity2').value:'moderate',
     favouriteMeals:APP.favourites?Object.keys(APP.favourites):[],
     hasSports:hasSports,
     sport:selSportEl?selSportEl.dataset.s:'None',
@@ -771,7 +922,14 @@ function buildViews(){
   var tkcal=m.training_kcal||m.tdee||0;var rkcal=m.rest_kcal||m.tdee||0;
   document.getElementById('statGrid').innerHTML='<div class="stat"><div class="stat-v">'+Math.round(rkcal)+'</div><div class="stat-l">Rest day kcal</div></div><div class="stat"><div class="stat-v">'+Math.round(tkcal)+'</div><div class="stat-l">Training day kcal</div></div><div class="stat"><div class="stat-v">'+(APP.trainingDayMacros.protein_g||0)+'g</div><div class="stat-l">Protein (train)</div></div><div class="stat"><div class="stat-v">'+(APP.trainingDayMacros.carbs_g||0)+'g</div><div class="stat-l">Carbs (train)</div></div>';
   document.getElementById('nb').textContent=(APP.familySizeNote||famStr)+' · Mifflin-St Jeor periodised'+(c.sport&&c.hasSports?' · '+c.sport:'')+(c.eventName?' · '+c.eventName:'');
-  buildPlan();buildFuelling();buildShop();buildCost();buildNutr();buildSupps();buildClientView();
+  planApproved = false;
+  // Build immediately: plan, fuelling, client view
+  buildPlan();buildFuelling();buildClientView();
+  // Deferred until approved: shopping, cost, nutrients, supplements
+  document.getElementById('tp-shop').innerHTML='<div class="nb" style="text-align:center;padding:2rem">Review your meal plan and swap any meals you don't like, then click <strong>Approve plan</strong> to generate your shopping list.</div>';
+  document.getElementById('tp-cost').innerHTML='<div class="nb" style="text-align:center;padding:2rem">Approve your plan first to see cost estimates.</div>';
+  document.getElementById('tp-nutr').innerHTML='<div class="nb" style="text-align:center;padding:2rem">Approve your plan first to see nutrient analysis.</div>';
+  document.getElementById('tp-supps').innerHTML='<div class="nb" style="text-align:center;padding:2rem">Approve your plan first to see supplement recommendations.</div>';
 }
 
 function dayTypeTag(d){
@@ -805,7 +963,9 @@ function mealSlotHTML(m,showTick,hasKids){
   var heartBtn='<button class="heart-btn'+(isFav?' on':'')+'" title="'+(isFav?'Remove from favourites':'Save as favourite')+'" onclick="toggleFavourite(this,\''+m.name.replace(/'/g,"\\'")+'\')">'+(isFav?'♥':'♡')+'</button>';
   var recipeBtn='<button class="recipe-btn" onclick="toggleRecipe(this,\''+mealId+'\',\''+m.name.replace(/'/g,"\\'")+'\')" data-mealname="'+m.name.replace(/"/g,'&quot;')+'">Get recipe &amp; instructions</button>';
   var recipePanel='<div class="recipe-panel" id="'+mealId+'"></div>';
-  return '<div class="meal-slot">'+tickEl+'<span class="mtype">'+m.type+'</span><div class="mname" style="flex:1">'+m.name+'<div class="macrow"><span class="mbadge mp">P '+Math.round(m.protein_g||0)+'g</span><span class="mbadge mc">C '+Math.round(m.carbs_g||0)+'g</span><span class="mbadge mf">F '+Math.round(m.fat_g||0)+'g</span>'+o3+'</div>'+timingB+freezeB+noteEl+kidsH+recipeBtn+recipePanel+'</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">'+heartBtn+'<span class="mcals">'+Math.round(m.kcal||0)+' kcal</span></div></div>';
+  var swapPanelId='swp_'+mealId;
+  var swapBtn='<button class="swap-btn" onclick="toggleSwap(this,\''+swapPanelId+'\',\''+m.name.replace(/\'/g,"\\\'")+'\',' + "'"+m.type+"'" + ')">↻ Swap this meal</button><div class="swap-panel" id="'+swapPanelId+'"></div>';
+  return '<div class="meal-slot">'+tickEl+'<span class="mtype">'+m.type+'</span><div class="mname" style="flex:1">'+m.name+'<div class="macrow"><span class="mbadge mp">P '+Math.round(m.protein_g||0)+'g</span><span class="mbadge mc">C '+Math.round(m.carbs_g||0)+'g</span><span class="mbadge mf">F '+Math.round(m.fat_g||0)+'g</span>'+o3+'</div>'+timingB+freezeB+noteEl+kidsH+swapBtn+recipeBtn+recipePanel+'</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">'+heartBtn+'<span class="mcals">'+Math.round(m.kcal||0)+' kcal</span></div></div>';
 }
 
 function buildPlan(){
@@ -1157,6 +1317,14 @@ function populateFormFromProfile(){
     if(c.adult2height) document.getElementById('height2').value=c.adult2height;
     if(c.adult2activity) document.getElementById('activity2').value=c.adult2activity;
     if(c.adult2diet) document.getElementById('diet2').value=c.adult2diet;
+    if(c.adult2mealspd) document.getElementById('mealspd2').value=c.adult2mealspd;
+    if(c.adult2hasSports){
+      showAdult2Sports=true;
+      toggleAdult2Sports(true);
+      if(c.adult2sport) document.getElementById('sport2').value=c.adult2sport;
+      if(c.adult2trainDays) document.getElementById('trainDays2').value=c.adult2trainDays;
+      if(c.adult2intensity) document.getElementById('intensity2').value=c.adult2intensity;
+    }
   }
   if(c.favouriteMeals&&c.favouriteMeals.length){
     APP.favourites={};
@@ -1171,10 +1339,11 @@ async function deleteProfile(evt,id){
 }
 
 function newPlan(){
-  editingProfileId=null;showAdult2=false;
+  editingProfileId=null;showAdult2=false;showAdult2Sports=false;planApproved=false;
   APP={retailer:'Tesco',tier:'essentials',plan:[],shopping:{},supplements:[],nutrients:{},macros:{},nutrientNotes:'',wasteNotes:[],batchTips:[],client:{},children:[],sharingMode:'same',daySchedule:[],costSummary:{},fuellingGuide:{},trainingDayMacros:{},restDayMacros:{},familySizeNote:'',favourites:{}};
   document.getElementById('adult2toggle').textContent='+ Add second adult to this plan';
   document.getElementById('adult2fields').style.display='none';
+  document.getElementById('adult2SportsFields').style.display='none';
   showPlanner();goS(1);
 }
 
