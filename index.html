@@ -177,6 +177,8 @@ textarea{resize:vertical;min-height:52px}
 .swap-opt:last-child{border-bottom:none}
 .swap-opt:hover .swap-arrow{color:#1D9E75}
 .swap-arrow{color:#ccc;margin-left:8px;flex-shrink:0}
+.locked-tab{color:#ccc !important;pointer-events:none !important}
+.locked-tab.unlocked{color:inherit !important;pointer-events:auto !important}
 .approve-bar{background:#E1F5EE;border:1px solid #5DCAA5;border-radius:12px;padding:14px 16px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .approve-bar.done{background:#E1F5EE;border-color:#1D9E75}
 .adult2-sports-fields{margin-top:10px;padding-top:10px;border-top:1px solid #e0ddd4}
@@ -429,10 +431,10 @@ textarea{resize:vertical;min-height:52px}
   <div class="tab-row">
     <div class="tab on" onclick="swTab('plan',this)">Meal plan</div>
     <div class="tab" onclick="swTab('fuelling',this)">Fuelling guide</div>
-    <div class="tab" id="tab-shop" onclick="swTab('shop',this)" style="color:#ccc;pointer-events:none">Shopping</div>
-    <div class="tab" id="tab-cost" onclick="swTab('cost',this)" style="color:#ccc;pointer-events:none">Cost</div>
-    <div class="tab" id="tab-nutr" onclick="swTab('nutr',this)" style="color:#ccc;pointer-events:none">Nutrients</div>
-    <div class="tab" id="tab-supps" onclick="swTab('supps',this)" style="color:#ccc;pointer-events:none">Supplements</div>
+    <div class="tab locked-tab" id="tab-shop" onclick="swTab('shop',this)">Shopping</div>
+    <div class="tab locked-tab" id="tab-cost" onclick="swTab('cost',this)">Cost</div>
+    <div class="tab locked-tab" id="tab-nutr" onclick="swTab('nutr',this)">Nutrients</div>
+    <div class="tab locked-tab" id="tab-supps" onclick="swTab('supps',this)">Supplements</div>
     <div class="tab" onclick="swTab('client',this)">Client view</div>
   </div>
   <div class="tp on" id="tp-plan"><div class="day-grid" id="planGrid"></div></div>
@@ -454,7 +456,7 @@ textarea{resize:vertical;min-height:52px}
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────
-const BACKEND = 'https://meal-plan-backend-su6p.onrender.com';
+const BACKEND = 'http://localhost:3001';
 
 // ── STATE ──────────────────────────────────────────────
 var APP={retailer:'Tesco',tier:'essentials',plan:[],shopping:{},supplements:[],nutrients:{},macros:{},nutrientNotes:'',wasteNotes:[],batchTips:[],client:{},children:[],sharingMode:'same',daySchedule:[],costSummary:{},fuellingGuide:{},trainingDayMacros:{},restDayMacros:{},familySizeNote:''};
@@ -565,7 +567,12 @@ function changeKids(delta){
 
 function renderChildCards(){
   var el=document.getElementById('childCards');var existing=[];
-  el.querySelectorAll('.child-card').forEach(function(c){existing.push({name:c.querySelector('.cname').value,age:c.querySelector('.cage').value,diet:c.querySelector('.cdiet')?c.querySelector('.cdiet').value:''});});
+  // Use APP.children data if available and counts match, otherwise use DOM
+  if(APP.children&&APP.children.length===kidCount&&el.querySelectorAll('.child-card').length===0){
+    existing=APP.children.map(function(ch){return{name:ch.name||'',age:ch.age||'',diet:ch.dietaryNeeds||''};});
+  } else {
+    el.querySelectorAll('.child-card').forEach(function(c){existing.push({name:c.querySelector('.cname').value,age:c.querySelector('.cage').value,diet:c.querySelector('.cdiet')?c.querySelector('.cdiet').value:''});});
+  }
   var h='';
   for(var i=0;i<kidCount;i++){
     var prev=existing[i]||{name:'',age:'',diet:''};var ageVal=parseInt(prev.age)||6;var ag=ageGroup(ageVal);
@@ -751,23 +758,15 @@ function approvePlan() {
     bar.style.borderColor = '#1D9E75';
     bar.innerHTML = '<div style="font-size:14px;color:#0F6E56"><strong>&#10003; Plan approved.</strong> Shopping list generated from your finalised meals.</div>';
   }
-  // Unlock all tabs — remove inline styles completely
+  // Unlock tabs by removing locked class
   ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id) {
     var t = document.getElementById(id);
-    if (t) {
-      t.removeAttribute('style');
-      t.onclick = function() { swTab('shop', this); };
-    }
+    if(t){ t.classList.remove('locked-tab'); t.classList.add('unlocked'); }
   });
-  // Fix individual onclick handlers
   var ts = document.getElementById('tab-shop');
   var tc = document.getElementById('tab-cost');
   var tn = document.getElementById('tab-nutr');
   var tsu = document.getElementById('tab-supps');
-  if(ts) ts.onclick = function(){ swTab('shop', this); };
-  if(tc) tc.onclick = function(){ swTab('cost', this); };
-  if(tn) tn.onclick = function(){ swTab('nutr', this); };
-  if(tsu) tsu.onclick = function(){ swTab('supps', this); };
   // Build all deferred views
   buildShop();
   buildCost();
@@ -955,6 +954,11 @@ function buildViews(){
   document.getElementById('statGrid').innerHTML='<div class="stat"><div class="stat-v">'+Math.round(rkcal)+'</div><div class="stat-l">Rest day kcal</div></div><div class="stat"><div class="stat-v">'+Math.round(tkcal)+'</div><div class="stat-l">Training day kcal</div></div><div class="stat"><div class="stat-v">'+(APP.trainingDayMacros.protein_g||0)+'g</div><div class="stat-l">Protein (train)</div></div><div class="stat"><div class="stat-v">'+(APP.trainingDayMacros.carbs_g||0)+'g</div><div class="stat-l">Carbs (train)</div></div>';
   document.getElementById('nb').textContent=(APP.familySizeNote||famStr)+' · Mifflin-St Jeor periodised'+(c.sport&&c.hasSports?' · '+c.sport:'')+(c.eventName?' · '+c.eventName:'');
   planApproved = false;
+  // Lock tabs using class
+  ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id){
+    var t = document.getElementById(id);
+    if(t){ t.classList.add('locked-tab'); t.classList.remove('unlocked','on'); }
+  });
   buildPlan(); buildFuelling(); buildClientView();
   var deferred = '<div class="nb" style="text-align:center;padding:2rem">Approve your plan above to generate this section.</div>';
   document.getElementById('tp-shop').innerHTML = deferred;
@@ -1301,8 +1305,9 @@ async function loadProfile(id){
     editingProfileId=id;
     // If there are saved plans, load the most recent one
     if(data.plans&&data.plans.length){
-      var latestPlanData=await api('/api/plans/'+data.plans[0].id);
-      if(latestPlanData.plan){
+      var latestPlanData = null;
+      try { latestPlanData = await api('/api/plans/'+data.plans[0].id); } catch(planErr) { latestPlanData = null; }
+      if(latestPlanData&&latestPlanData.plan){
         var pd=latestPlanData.plan.plan_data;
         APP.plan=pd.days||[];APP.shopping=pd.shopping||{};
         APP.supplements=pd.supplements||[];APP.nutrients=pd.nutrients_weekly||{};
@@ -1317,7 +1322,7 @@ async function loadProfile(id){
         buildShop(); buildCost(); buildNutr(); buildSupps();
         var bar = document.getElementById('approveBar');
         if(bar){ bar.style.background='#E1F5EE'; bar.style.borderColor='#1D9E75'; bar.innerHTML='<div style="font-size:14px;color:#0F6E56"><strong>&#10003; Saved plan loaded.</strong> Edit or regenerate to create a new plan.</div>'; }
-        ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id){ var t=document.getElementById(id); if(t){t.removeAttribute('style');} });
+        ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id){ var t=document.getElementById(id); if(t){t.classList.remove('locked-tab');t.classList.add('unlocked');} });
         showPlanner();
         document.getElementById('s'+curStep).classList.remove('active');
         curStep=7;document.getElementById('s7').classList.add('active');
@@ -1329,7 +1334,7 @@ async function loadProfile(id){
     populateFormFromProfile();
     showPlanner();
     goS(1);
-  }catch(e){alert('Could not load profile.');}
+  }catch(e){console.error('loadProfile error:',e);alert('Could not load profile: '+(e.message||'Unknown error'));}
 }
 
 function populateFormFromProfile(){
@@ -1343,6 +1348,13 @@ function populateFormFromProfile(){
   if(c.batchcook) document.getElementById('batchcook').value=c.batchcook;
   if(c.incSnacks) document.getElementById('incSnacks').value=c.incSnacks;
   if(c.days) document.getElementById('days').value=c.days;
+  if(c.mealspd) { var ms=document.getElementById('mealspd'); if(ms) ms.value=c.mealspd; }
+  // Restore children
+  if(APP.children&&APP.children.length){
+    kidCount=APP.children.length;
+    document.getElementById('kidCount').textContent=kidCount;
+    renderChildCards();
+  }
   if(c.hasAdult2){
     showAdult2=true;
     document.getElementById('adult2fields').style.display='block';
