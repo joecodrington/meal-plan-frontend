@@ -615,12 +615,17 @@ function buildDayPlanner(){
     if(hasSports){
       h+='<div class="dp-row"><span>Training</span><select class="train-sel"><option value="rest">Rest day</option><option value="easy">Easy session</option><option value="moderate">Moderate session</option><option value="hard">Hard session</option><option value="long">Long session</option><option value="race">Race day</option></select></div>';
     }
-    h+='<div class="dp-row"><span>Evening</span><select class="eve-sel"><option value="normal">Home dinner</option><option value="out_evening">Eating out</option><option value="skip">Skip</option></select></div>';
+    h+='<div class="dp-row"><span>Breakfast</span><select class="brekkie-sel"><option value="home">At home</option><option value="skip">Skip / not hungry</option><option value="out">Eating out</option></select></div>';
+    if(showAdult2){
+      var partnerName2=document.getElementById('fname2').value||'Partner';
+      h+='<div class="dp-row"><span>'+partnerName2+' breakfast</span><select class="partner-brekkie-sel"><option value="home">At home</option><option value="work">At work / eaten there</option><option value="skip">Skip / not hungry</option><option value="out">Eating out</option></select></div>';
+    }
     h+='<div class="dp-row"><span>Lunch</span><select class="lunch-sel"><option value="home">At home</option><option value="shops">Out to shops</option><option value="canteen">Canteen</option><option value="packed">Packed</option><option value="skip">Skip</option></select></div>';
     if(showAdult2){
       var partnerName=document.getElementById('fname2').value||'Partner';
-      h+='<div class="dp-row partner-lunch-row"><span>'+partnerName+' lunch</span><select class="partner-lunch-sel"><option value="home">At home</option><option value="shops">Out to shops</option><option value="canteen">Canteen / work</option><option value="packed">Packed lunch</option><option value="skip">Skip</option></select></div>';
+      h+='<div class="dp-row"><span>'+partnerName+' lunch</span><select class="partner-lunch-sel"><option value="home">At home</option><option value="shops">Out to shops</option><option value="canteen">Canteen / work</option><option value="packed">Packed lunch</option><option value="skip">Skip</option></select></div>';
     }
+    h+='<div class="dp-row"><span>Evening</span><select class="eve-sel"><option value="normal">Home dinner</option><option value="out_evening">Eating out</option><option value="skip">Skip</option></select></div>';
     if(numKids>0){
       h+='<div class="dp-row"><span>Kids eve</span><select class="kids-eve-sel"><option value="same">Same as adults</option><option value="separate">Own meal</option><option value="out">Eating out</option><option value="skip">Skip</option></select></div>';
       if(isWeekday) h+='<div class="dp-row"><span>Kids lunch</span><select class="kids-lunch-sel"><option value="school">School</option><option value="packed">Packed</option><option value="home">At home</option></select></div>';
@@ -635,12 +640,14 @@ function getDaySchedule(){
   cards.forEach(function(c){
     var sels=c.querySelectorAll('select');var idx=0;
     var training=hasSports?(sels[idx++]?sels[idx-1].value:'rest'):'rest';
-    var adultEvening=sels[idx]?sels[idx++].value:'normal';
+    var adultBreakfast=sels[idx]?sels[idx++].value:'home';
+    var partnerBreakfast=showAdult2?(sels[idx]?sels[idx++].value:'home'):'home';
     var adultLunch=sels[idx]?sels[idx++].value:'home';
     var partnerLunch=showAdult2?(sels[idx]?sels[idx++].value:'home'):'home';
+    var adultEvening=sels[idx]?sels[idx++].value:'normal';
     var kidsEvening=sels[idx]?sels[idx++].value:'same';
     var kidsLunch=sels[idx]?sels[idx].value:'school';
-    sched.push({day:c.dataset.d,training:training,adultEvening:adultEvening,adultLunch:adultLunch,partnerLunch:partnerLunch,kidsEvening:kidsEvening,kidsLunch:kidsLunch});
+    sched.push({day:c.dataset.d,training:training,adultBreakfast:adultBreakfast,partnerBreakfast:partnerBreakfast,adultLunch:adultLunch,partnerLunch:partnerLunch,adultEvening:adultEvening,kidsEvening:kidsEvening,kidsLunch:kidsLunch});
   });
   return sched;
 }
