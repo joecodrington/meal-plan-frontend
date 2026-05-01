@@ -617,6 +617,10 @@ function buildDayPlanner(){
     }
     h+='<div class="dp-row"><span>Evening</span><select class="eve-sel"><option value="normal">Home dinner</option><option value="out_evening">Eating out</option><option value="skip">Skip</option></select></div>';
     h+='<div class="dp-row"><span>Lunch</span><select class="lunch-sel"><option value="home">At home</option><option value="shops">Out to shops</option><option value="canteen">Canteen</option><option value="packed">Packed</option><option value="skip">Skip</option></select></div>';
+    if(showAdult2){
+      var partnerName=document.getElementById('fname2').value||'Partner';
+      h+='<div class="dp-row partner-lunch-row"><span>'+partnerName+' lunch</span><select class="partner-lunch-sel"><option value="home">At home</option><option value="shops">Out to shops</option><option value="canteen">Canteen / work</option><option value="packed">Packed lunch</option><option value="skip">Skip</option></select></div>';
+    }
     if(numKids>0){
       h+='<div class="dp-row"><span>Kids eve</span><select class="kids-eve-sel"><option value="same">Same as adults</option><option value="separate">Own meal</option><option value="out">Eating out</option><option value="skip">Skip</option></select></div>';
       if(isWeekday) h+='<div class="dp-row"><span>Kids lunch</span><select class="kids-lunch-sel"><option value="school">School</option><option value="packed">Packed</option><option value="home">At home</option></select></div>';
@@ -630,7 +634,13 @@ function getDaySchedule(){
   var cards=document.querySelectorAll('.dp-card');var sched=[];
   cards.forEach(function(c){
     var sels=c.querySelectorAll('select');var idx=0;
-    sched.push({day:c.dataset.d,training:hasSports?(sels[idx++]?sels[idx-1].value:'rest'):'rest',adultEvening:sels[idx]?sels[idx++].value:'normal',adultLunch:sels[idx]?sels[idx++].value:'home',kidsEvening:sels[idx]?sels[idx++].value:'same',kidsLunch:sels[idx]?sels[idx].value:'school'});
+    var training=hasSports?(sels[idx++]?sels[idx-1].value:'rest'):'rest';
+    var adultEvening=sels[idx]?sels[idx++].value:'normal';
+    var adultLunch=sels[idx]?sels[idx++].value:'home';
+    var partnerLunch=showAdult2?(sels[idx]?sels[idx++].value:'home'):'home';
+    var kidsEvening=sels[idx]?sels[idx++].value:'same';
+    var kidsLunch=sels[idx]?sels[idx].value:'school';
+    sched.push({day:c.dataset.d,training:training,adultEvening:adultEvening,adultLunch:adultLunch,partnerLunch:partnerLunch,kidsEvening:kidsEvening,kidsLunch:kidsLunch});
   });
   return sched;
 }
