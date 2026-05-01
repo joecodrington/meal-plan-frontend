@@ -1017,12 +1017,12 @@ function buildPlan(){
     h+='<div class="meal-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div class="meal-day">'+d.day+'</div>'+dayTypeTag(d)+'</div>';
     (d.meals||[]).forEach(function(m){h+=mealSlotHTML(m,false,hasKids);});h+='</div>';
   });
-  document.getElementById('planGrid').innerHTML=h||'<div class="nb">No meals generated.</div>';
+  var pg=document.getElementById('planGrid'); if(!pg){var tpp=document.getElementById('tp-plan');if(tpp){tpp.innerHTML='<div class="day-grid" id="planGrid"></div>';pg=document.getElementById('planGrid');}} if(pg) pg.innerHTML=h||'<div class="nb">No meals generated.</div>';
 }
 
 function buildFuelling(){
   var fg=APP.fuellingGuide||{};var c=APP.client;
-  if(!c.hasSports){document.getElementById('fuellingView').innerHTML='<div class="nb">No sports goal set. Enable sports nutrition in the profile to see fuelling guidance.</div>';return;}
+  if(!c.hasSports){document.getElementById('tp-fuelling').innerHTML='<div class="nb">No sports goal set. Enable sports nutrition in the profile to see fuelling guidance.</div>';return;}
   var h='';
   if(APP.trainingDayMacros.carbs_g){
     h+='<div class="macro-compare"><div class="mc-card"><div class="mc-title">Training day targets</div><div class="macrow" style="gap:8px"><span class="mbadge mc" style="font-size:13px;padding:3px 10px">C '+Math.round(APP.trainingDayMacros.carbs_g||0)+'g</span><span class="mbadge mp" style="font-size:13px;padding:3px 10px">P '+Math.round(APP.trainingDayMacros.protein_g||0)+'g</span></div><div style="font-size:13px;color:#888;margin-top:8px">'+Math.round(APP.macros.training_kcal||0)+' kcal</div></div><div class="mc-card"><div class="mc-title">Rest day targets</div><div class="macrow" style="gap:8px"><span class="mbadge mc" style="font-size:13px;padding:3px 10px">C '+Math.round(APP.restDayMacros.carbs_g||0)+'g</span><span class="mbadge mp" style="font-size:13px;padding:3px 10px">P '+Math.round(APP.restDayMacros.protein_g||0)+'g</span></div><div style="font-size:13px;color:#888;margin-top:8px">'+Math.round(APP.macros.rest_kcal||0)+' kcal</div></div></div>';
@@ -1044,7 +1044,7 @@ function buildFuelling(){
   h+='<div class="phase-section"><div class="phase-hd" style="border-left:3px solid #0F6E56;border-radius:0">Post-workout recovery</div>'+fuelSection('Recovery window (30 mins)',fg.post_workout_30min,'#0F6E56')+fuelSection('Full recovery meal (2 hrs)',fg.post_workout_2hr,'#0F6E56')+'</div>';
   if(fg.carb_loading&&c.carbLoad!=='none') h+='<div class="phase-section"><div class="phase-hd" style="border-left:3px solid #185FA5;border-radius:0">Carbohydrate loading</div>'+fuelSection('Carb loading protocol',fg.carb_loading,'#185FA5')+'</div>';
   if(fg.race_day){var rd=fg.race_day;h+='<div class="phase-section"><div class="phase-hd" style="border-left:3px solid #A32D2D;border-radius:0">Race day</div><div class="fuelling-card">'+(rd.morning_meal?'<div style="font-weight:600;color:#A32D2D;font-size:12px;margin-bottom:4px">Race morning</div><div style="font-size:14px">'+rd.morning_meal+'</div>':'')+(rd.timing?'<div style="font-size:12px;color:#888;margin-top:4px">Timing: '+rd.timing+'</div>':'')+(rd.mid_race?'<div style="margin-top:10px;font-weight:600;color:#3C3489;font-size:12px;margin-bottom:4px">Mid-race</div><div style="font-size:14px">'+rd.mid_race+'</div>':'')+(rd.post_race?'<div style="margin-top:10px;font-weight:600;color:#0F6E56;font-size:12px;margin-bottom:4px">Post-race</div><div style="font-size:14px">'+rd.post_race+'</div>':'')+'</div></div>';}
-  document.getElementById('fuellingView').innerHTML=h;
+  document.getElementById('tp-fuelling').innerHTML=h;
 }
 
 function shopUrl(retailer, itemName, tier) {
@@ -1085,7 +1085,7 @@ function buildShop(){
   AISLE_ORDER.forEach(function(cat){var items=shopping[cat];if(!items||!items.length) return;items.forEach(function(it){allItems.push({cat:cat,item:it});});});
   Object.keys(shopping).forEach(function(cat){if(AISLE_ORDER.indexOf(cat)===-1){(shopping[cat]||[]).forEach(function(it){allItems.push({cat:cat,item:it});});}});
   if(!allItems.length){
-    document.getElementById('shopList').innerHTML='<div class="nb" style="text-align:center;padding:2rem">No shopping items found. Try regenerating the plan.</div>';
+    document.getElementById('tp-shop').innerHTML='<div class="nb" style="text-align:center;padding:2rem">No shopping items found. Try regenerating the plan.</div>';
     return;
   }
   var tierLabel=tier==='essentials'?'Own brand / essentials':tier==='organic'?'Organic / premium':'Mid-range';
@@ -1128,7 +1128,7 @@ function buildShop(){
   });
   if(currentCat!=='') h+='</div>';
   h+='<div class="nb" style="margin-top:1rem;font-size:12px">💡 Tap each link to open in '+retailer+', then add to your trolley. Tick items off as you go.</div>';
-  document.getElementById('shopList').innerHTML=h;
+  document.getElementById('tp-shop').innerHTML=h;
 }
 
 function toggleShopTick(el){
@@ -1201,7 +1201,7 @@ function buildCost(){
   h+='</div><div style="margin-top:1rem"><div class="sec-lbl">Tier comparison</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">';
   Object.entries(tierMult).forEach(function(e){var name=e[0]==='essentials'?'Essentials':e[0]==='mid'?'Mid-range':'Organic';var est=grand*(e[1]/tierMult[tier]);h+='<div style="border:'+(e[0]===tier?'2px solid #1D9E75':'1px solid #e0ddd4')+';border-radius:8px;padding:10px;text-align:center"><div style="font-size:13px;color:#888">'+name+'</div><div style="font-size:20px;font-weight:600">£'+est.toFixed(2)+'</div></div>';});
   h+='</div></div>';
-  document.getElementById('costView').innerHTML=h;
+  document.getElementById('tp-cost').innerHTML=h;
 }
 
 function buildNutr(){
@@ -1214,7 +1214,7 @@ function buildNutr(){
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">';
   [['Vitamin D',n.vit_d_adequate],['Vitamin B12',n.b12_adequate],['Iron',n.iron_adequate],['Calcium',n.calcium_adequate]].forEach(function(row){h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0ede4"><span style="font-size:14px">'+row[0]+'</span>'+sp(row[1])+'</div>';});
   h+='</div></div>';if(APP.nutrientNotes) h+='<div class="nb">'+APP.nutrientNotes+'</div>';
-  document.getElementById('nutrView').innerHTML=h;
+  document.getElementById('tp-nutr').innerHTML=h;
 }
 
 function buildSupps(){
@@ -1229,7 +1229,7 @@ function buildSupps(){
     rets.forEach(function(r){h+='<a class="supp-link" href="'+r.url+term+'" target="_blank">'+r.name+' →</a>';});
     h+='</div></div></div>';
   });
-  document.getElementById('suppsView').innerHTML=h;
+  document.getElementById('tp-supps').innerHTML=h;
 }
 
 function buildClientView(){
@@ -1244,7 +1244,7 @@ function buildClientView(){
     (d.meals||[]).forEach(function(m){h+=mealSlotHTML(m,true,hasKids);});h+='</div>';
   });
   h+='<div style="display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap"><button class="btn" onclick="exportIcal()">Add to calendar</button></div>';
-  document.getElementById('clientView').innerHTML=h;
+  document.getElementById('tp-client').innerHTML=h;
 }
 
 // ── CALENDAR EXPORT ────────────────────────────────────
