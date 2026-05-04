@@ -72,10 +72,10 @@ textarea{resize:vertical;min-height:52px}
 .tick{width:18px;height:18px;border-radius:4px;border:1.5px solid #d0cdc4;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:2px;background:#fff}
 .tick.on{background:#1D9E75;border-color:#1D9E75}
 .tick.on::after{content:'';width:5px;height:8px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg) translateY(-1px);display:block}
-.sitem{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0ede4;font-size:14px}
+.sitem{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0ede4;font-size:14px;min-height:44px}
 .sitem:last-child{border-bottom:none}
 .sqty{color:#888;font-size:13px;margin-left:auto;margin-right:6px;white-space:nowrap}
-.slink{font-size:12px;color:#1D9E75;text-decoration:none;white-space:nowrap}
+.slink{font-size:13px;color:#1D9E75;text-decoration:none;white-space:nowrap;padding:4px 8px;background:#E1F5EE;border-radius:6px;font-weight:500}
 .sprice{font-size:13px;font-weight:500;color:#1a1a18;white-space:nowrap;min-width:40px;text-align:right}
 .shop-cat{margin-bottom:1.25rem}
 .scat-t{font-size:14px;font-weight:600;color:#1a1a18;margin-bottom:6px;display:flex;justify-content:space-between}
@@ -751,9 +751,6 @@ function pickSwap(el) {
 
 function approvePlan() {
   planApproved = true;
-  console.log('approvePlan called. APP.shopping keys:', Object.keys(APP.shopping||{}));
-  console.log('APP.costSummary:', APP.costSummary);
-  console.log('APP.plan days:', (APP.plan||[]).length);
   // Update approve bar
   var bar = document.getElementById('approveBar');
   if (bar) {
@@ -1080,7 +1077,6 @@ var AISLE_ORDER = ['Produce','Protein','Dairy and alternatives','Bakery','Grains
 
 function buildShop(){
   var retailer=APP.retailer;var tier=APP.tier;var shopping=APP.shopping||{};var cs=APP.costSummary||{};var grand=cs.grand_total_gbp||0;
-  console.log('buildShop called. Shopping keys:', Object.keys(shopping), 'grand:', grand);
   var allItems=[];
   AISLE_ORDER.forEach(function(cat){var items=shopping[cat];if(!items||!items.length) return;items.forEach(function(it){allItems.push({cat:cat,item:it});});});
   Object.keys(shopping).forEach(function(cat){if(AISLE_ORDER.indexOf(cat)===-1){(shopping[cat]||[]).forEach(function(it){allItems.push({cat:cat,item:it});});}});
@@ -1299,12 +1295,24 @@ async function loadSavedProfiles(){
       var initials=(p.name||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
       var d=new Date(p.updated_at);var dateStr=d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
       var kids=p.children&&p.children.length?p.children.length+' child'+(p.children.length>1?'ren':''):'No children';
-      h+='<div class="saved-profile" onclick="loadProfile(\''+p.id+'\')"><div class="avatar">'+initials+'</div><div style="flex:1"><div style="font-size:14px;font-weight:600">'+p.name+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+(p.sport||'General health')+' · '+kids+'</div></div><div style="font-size:12px;color:#888;text-align:right;flex-shrink:0">'+dateStr+'</div><button class="btn-sm" style="margin-left:8px;color:#A32D2D;border-color:#E24B4A" onclick="deleteProfile(event,\''+p.id+'\')">Delete</button></div>';
+      h+='<div class="saved-profile" id="profile_'+p.id+'" onclick="loadProfileWithSpinner(\''+p.id+'\')"><div class="avatar">'+initials+'</div><div style="flex:1"><div style="font-size:14px;font-weight:600">'+p.name+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+(p.sport||'General health')+' · '+kids+'</div></div><div style="font-size:12px;color:#888;text-align:right;flex-shrink:0" id="profile_date_'+p.id+'">'+dateStr+'</div><button class="btn-sm" style="margin-left:8px;color:#A32D2D;border-color:#E24B4A" onclick="deleteProfile(event,\''+p.id+'\')">Delete</button></div>';
     });
     list.innerHTML=h;
   }catch(e){
     list.innerHTML='<div class="nb">Could not load profiles. Make sure you are logged in.</div>';
   }
+}
+
+function loadProfileWithSpinner(id) {
+  // Show loading state on the card
+  var card = document.getElementById('profile_'+id);
+  var dateEl = document.getElementById('profile_date_'+id);
+  if(card) card.style.opacity = '0.6';
+  if(dateEl) dateEl.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block"></span>';
+  loadProfile(id).catch(function(){
+    if(card) card.style.opacity = '1';
+    if(dateEl) dateEl.textContent = 'Error loading';
+  });
 }
 
 async function loadProfile(id){
