@@ -264,7 +264,7 @@ textarea{resize:vertical;min-height:52px}
 <div class="step active" id="s1">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px">
     <div><div style="font-size:18px;font-weight:600">Client profile</div><div style="font-size:14px;color:#888;margin-top:3px">Personal details and dietary needs</div></div>
-    <button class="btn" onclick="showHome()">← All clients</button>
+    <button class="btn" onclick="showHome()" id="backHomeBtn">← All clients</button>
   </div>
   <div class="card">
     <div class="sec-lbl">Personal details</div>
@@ -437,7 +437,7 @@ textarea{resize:vertical;min-height:52px}
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn pri" id="regenBtn" onclick="regenPlan()">&#8635; New plan</button>
       <button class="btn" id="saveBtn" onclick="saveProfile()">Save client</button>
-      <button class="btn" onclick="showHome()">&#8592; All clients</button>
+      <button class="btn" onclick="showHome()" id="backHomeBtnS7">&#8592; All clients</button>
     </div>
   </div>
   <div class="stat-grid" id="statGrid"></div>
@@ -1667,6 +1667,10 @@ function relabelForConsumer() {
   if(saveBtn) saveBtn.textContent = 'Save plan';
   var regenBtn = document.getElementById('regenBtn');
   if(regenBtn) regenBtn.textContent = 'New week';
+  var backBtn = document.getElementById('backHomeBtn');
+  if(backBtn) backBtn.textContent = 'Home';
+  var backBtnS7 = document.getElementById('backHomeBtnS7');
+  if(backBtnS7) backBtnS7.innerHTML = '&#8592; Home';
 }
 
 
