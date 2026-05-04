@@ -530,7 +530,7 @@ async function register(){
   var err=document.getElementById('registerError');
   err.style.display='none';
   try{
-    var role=document.getElementById('rolePrac').classList.contains('on')?'practitioner':'consumer';
+    var role = regRole || 'practitioner';
     var data=await api('/api/auth/register','POST',{name,email,password,role:role});
     if(data.success){
       authToken=data.token;
@@ -565,6 +565,7 @@ function showApp(){
   document.getElementById('userEmail').style.display='inline';
   document.getElementById('logoutBtn').style.display='inline-block';
   document.getElementById('authStatus').style.display='none';
+  console.log('showApp role:', currentUser && currentUser.role);
   if(isConsumer()) {
     showConsumerHome();
   } else {
