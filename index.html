@@ -217,6 +217,13 @@ textarea{resize:vertical;min-height:52px}
       <div class="field"><label>Your name</label><input type="text" id="regName" placeholder="Sarah Thompson"/></div>
       <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"/></div>
       <div class="field"><label>Password</label><input type="password" id="regPassword" placeholder="At least 8 characters"/></div>
+      <div class="field">
+        <label>I am a...</label>
+        <div style="display:flex;gap:0;border:1px solid #d0cdc4;border-radius:8px;overflow:hidden;margin-top:4px" id="roleToggle">
+          <div class="ft-btn on" id="rolePrac" onclick="setRegRole('practitioner')" style="background:#1D9E75;color:#fff;flex:1;text-align:center;padding:9px">Nutritionist / Practitioner</div>
+          <div class="ft-btn" id="roleCons" onclick="setRegRole('consumer')" style="flex:1;text-align:center;padding:9px">Managing my own household</div>
+        </div>
+      </div>
       <button class="btn-full" onclick="register()">Create account</button>
       <div class="auth-switch">Already have an account? <a onclick="showLogin()">Log in</a></div>
     </div>
@@ -234,6 +241,16 @@ textarea{resize:vertical;min-height:52px}
     <button class="btn pri" onclick="newPlan()">+ New client</button>
   </div>
   <div id="savedList"></div>
+</div>
+
+<!-- CONSUMER HOME -->
+<div class="home-screen" id="consumerHome">
+  <div style="margin-bottom:1.5rem">
+    <div style="font-size:22px;font-weight:600" id="consumerGreeting">Your meal plans</div>
+    <div style="font-size:14px;color:#888;margin-top:4px">Plan your week, shop smart, eat well.</div>
+  </div>
+  <div id="consumerLatestPlan" style="margin-bottom:1.5rem"></div>
+  <div id="consumerPlanHistory"></div>
 </div>
 
 <!-- PLANNER -->
@@ -466,6 +483,16 @@ var authToken=localStorage.getItem('authToken')||null;
 var currentUser=JSON.parse(localStorage.getItem('currentUser')||'null');
 
 // ── AUTH ───────────────────────────────────────────────
+var regRole = 'practitioner';
+function setRegRole(role) {
+  regRole = role;
+  document.getElementById('rolePrac').style.background = role==='practitioner' ? '#1D9E75' : '#fff';
+  document.getElementById('rolePrac').style.color = role==='practitioner' ? '#fff' : '#888';
+  document.getElementById('roleCons').style.background = role==='consumer' ? '#1D9E75' : '#fff';
+  document.getElementById('roleCons').style.color = role==='consumer' ? '#fff' : '#888';
+}
+function isConsumer() { return currentUser && currentUser.role === 'consumer'; }
+
 function api(path,method,body){
   var opts={method:method||'GET',headers:{'Content-Type':'application/json'}};
   if(authToken) opts.headers['Authorization']='Bearer '+authToken;
@@ -503,7 +530,8 @@ async function register(){
   var err=document.getElementById('registerError');
   err.style.display='none';
   try{
-    var data=await api('/api/auth/register','POST',{name,email,password,role:'practitioner'});
+    var role=document.getElementById('rolePrac').classList.contains('on')?'practitioner':'consumer';
+    var data=await api('/api/auth/register','POST',{name,email,password,role:role});
     if(data.success){
       authToken=data.token;
       currentUser=data.user;
@@ -537,7 +565,11 @@ function showApp(){
   document.getElementById('userEmail').style.display='inline';
   document.getElementById('logoutBtn').style.display='inline-block';
   document.getElementById('authStatus').style.display='none';
-  loadSavedProfiles();
+  if(isConsumer()) {
+    showConsumerHome();
+  } else {
+    loadSavedProfiles();
+  }
 }
 
 function showRegister(){document.getElementById('loginForm').style.display='none';document.getElementById('registerForm').style.display='block';}
@@ -1468,10 +1500,185 @@ function showPlanner(){
   document.getElementById('plannerWrap').style.display='block';
 }
 
+// -- CONSUMER MODE --
+var regRole = 'practitioner';
+function setRegRole(role) {
+  regRole = role;
+  var prac = document.getElementById('rolePrac');
+  var cons = document.getElementById('roleCons');
+  if(prac){ prac.style.background = role==='practitioner' ? '#1D9E75' : '#fff'; prac.style.color = role==='practitioner' ? '#fff' : '#888'; }
+  if(cons){ cons.style.background = role==='consumer' ? '#1D9E75' : '#fff'; cons.style.color = role==='consumer' ? '#fff' : '#888'; }
+}
+function isConsumer() { return currentUser && currentUser.role === 'consumer'; }
+
+function showConsumerHome() {
+  document.getElementById('homeScreen').classList.remove('active');
+  document.getElementById('consumerHome').classList.add('active');
+  var firstName = currentUser && currentUser.name ? currentUser.name.split(' ')[0] : '';
+  var greeting = firstName ? 'Hi ' + firstName + ', your meal plans' : 'Your meal plans';
+  document.getElementById('consumerGreeting').textContent = greeting;
+  loadConsumerPlans();
+}
+
+async function loadConsumerPlans() {
+  var latestEl = document.getElementById('consumerLatestPlan');
+  var histEl = document.getElementById('consumerPlanHistory');
+  latestEl.innerHTML = '<div style="text-align:center;padding:1rem"><div class="spinner" style="width:20px;height:20px;border-width:2px;display:inline-block"></div></div>';
+  try {
+    var data = await api('/api/clients');
+    var profiles = data.profiles || [];
+    if (!profiles.length) {
+      var emptyHtml = '<div style="background:#fff;border:1px solid #e0ddd4;border-radius:12px;padding:2rem;text-align:center">';
+      emptyHtml += '<div style="font-size:32px;margin-bottom:12px">&#127859;</div>';
+      emptyHtml += '<div style="font-size:16px;font-weight:600;margin-bottom:6px">Create your first meal plan</div>';
+      emptyHtml += '<div style="font-size:14px;color:#888;margin-bottom:1.25rem">Tell us about yourself and we will build a personalised week of meals with a smart shopping list.</div>';
+      emptyHtml += '<button class="btn pri" style="font-size:15px;padding:10px 24px" onclick="newConsumerPlan()">Get started</button></div>';
+      latestEl.innerHTML = emptyHtml;
+      histEl.innerHTML = '';
+      return;
+    }
+    var profile = profiles[0];
+    var detail = await api('/api/clients/' + profile.id);
+    var plans = detail.plans || [];
+    var sport = profile.sport || 'General health';
+    var kidCount2 = profile.children && profile.children.length ? profile.children.length : 0;
+    var kidStr = kidCount2 ? ' &middot; ' + kidCount2 + ' child' + (kidCount2>1?'ren':'') : '';
+    var lastPlanStr = plans.length ? 'Last plan: ' + new Date(plans[0].created_at).toLocaleDateString('en-GB') + ' &middot; ' + plans[0].days + ' days' : 'No plans yet &mdash; click New week to get started';
+    var latestPlanId = plans.length ? plans[0].id : null;
+    var latestHtml = '<div style="background:#fff;border:1px solid #e0ddd4;border-radius:12px;padding:1.25rem;margin-bottom:12px">';
+    latestHtml += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem">';
+    latestHtml += '<div><div style="font-size:16px;font-weight:600">Your household</div>';
+    latestHtml += '<div style="font-size:13px;color:#888;margin-top:2px">' + sport + kidStr + '</div></div>';
+    latestHtml += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    latestHtml += '<button class="btn pri" onclick="newConsumerPlan()">&#8635; New week</button>';
+    if(latestPlanId) {
+      latestHtml += '<button class="btn" onclick="loadConsumerProfile(\'' + profile.id + '\',\'' + latestPlanId + '\')">View last plan</button>';
+    }
+    latestHtml += '</div></div>';
+    latestHtml += '<div style="font-size:13px;color:#888">' + lastPlanStr + '</div></div>';
+    latestEl.innerHTML = latestHtml;
+    if (plans.length > 1) {
+      var h = '<div style="font-size:13px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Previous plans</div>';
+      plans.slice(1).forEach(function(plan) {
+        var dateStr = new Date(plan.created_at).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long'});
+        var costStr = plan.cost_summary && plan.cost_summary.grand_total_gbp ? ' &middot; &pound;' + plan.cost_summary.grand_total_gbp.toFixed(2) : '';
+        h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1px solid #e0ddd4;border-radius:8px;margin-bottom:6px;cursor:pointer" onclick="loadConsumerProfile(\'' + profile.id + '\',\'' + plan.id + '\')">';
+        h += '<div><div style="font-size:14px;font-weight:500">' + dateStr + '</div>';
+        h += '<div style="font-size:12px;color:#888">' + plan.days + '-day plan' + costStr + '</div></div>';
+        h += '<span style="color:#1D9E75;font-size:13px">View &#8594;</span></div>';
+      });
+      histEl.innerHTML = h;
+    } else {
+      histEl.innerHTML = '';
+    }
+  } catch(e) {
+    latestEl.innerHTML = '<div class="nb">Could not load your plans. Please try again.</div>';
+  }
+}
+
+function newConsumerPlan() {
+  editingProfileId = null;
+  api('/api/clients').then(function(data) {
+    var profiles = (data.profiles || []);
+    if (profiles.length) {
+      editingProfileId = profiles[0].id;
+      api('/api/clients/' + profiles[0].id).then(function(detail) {
+        if (detail.profile) {
+          APP.client = detail.profile.client_data || {};
+          APP.children = detail.profile.children || [];
+          APP.sharingMode = detail.profile.sharing_mode || 'same';
+          APP.retailer = detail.profile.retailer || 'Tesco';
+          APP.tier = detail.profile.tier || 'essentials';
+          APP.daySchedule = detail.profile.day_schedule || [];
+          APP.favourites = APP.client.favouriteMeals ? APP.client.favouriteMeals.reduce(function(o,m){o[m]=true;return o;},{}) : {};
+        }
+        startConsumerFlow();
+      }).catch(function(){ startConsumerFlow(); });
+    } else {
+      startConsumerFlow();
+    }
+  }).catch(function(){ startConsumerFlow(); });
+}
+
+function startConsumerFlow() {
+  relabelForConsumer();
+  document.getElementById('consumerHome').classList.remove('active');
+  showPlanner();
+  populateFormFromProfile();
+  document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
+  curStep=1; document.getElementById('s1').classList.add('active');
+  for(var i=1;i<=8;i++){var el=document.getElementById('ps'+i);if(el) el.className='ps'+(i===1?' act':'');}
+  window.scrollTo(0,0);
+}
+
+async function loadConsumerProfile(profileId, planId) {
+  var latestEl = document.getElementById('consumerLatestPlan');
+  if(latestEl) latestEl.style.opacity = '0.6';
+  try {
+    var detail = await api('/api/clients/' + profileId);
+    if (!detail.profile) throw new Error('No profile');
+    APP.client = detail.profile.client_data || {};
+    APP.children = detail.profile.children || [];
+    APP.sharingMode = detail.profile.sharing_mode || 'same';
+    APP.retailer = detail.profile.retailer || 'Tesco';
+    APP.tier = detail.profile.tier || 'essentials';
+    APP.daySchedule = detail.profile.day_schedule || [];
+    APP.favourites = APP.client.favouriteMeals ? APP.client.favouriteMeals.reduce(function(o,m){o[m]=true;return o;},{}) : {};
+    editingProfileId = profileId;
+    if (planId) {
+      var planData = await api('/api/plans/' + planId);
+      if (planData.plan) {
+        var pd = planData.plan.plan_data;
+        APP.plan=pd.days||[]; APP.shopping=pd.shopping||{}; APP.supplements=pd.supplements||[];
+        APP.nutrients=pd.nutrients_weekly||{};
+        APP.macros={tdee:pd.tdee,training_kcal:pd.training_day_kcal,rest_kcal:pd.rest_day_kcal};
+        APP.trainingDayMacros=pd.training_day_macros||{}; APP.restDayMacros=pd.rest_day_macros||{};
+        APP.nutrientNotes=pd.nutrient_notes||''; APP.costSummary=pd.cost_summary||{}; APP.fuellingGuide=pd.fuelling_guide||{};
+      }
+    }
+    relabelForConsumer();
+    document.getElementById('consumerHome').classList.remove('active');
+    showPlanner();
+    document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
+    document.getElementById('s7').classList.add('active'); curStep=7;
+    for(var i=1;i<=8;i++){var el=document.getElementById('ps'+i);if(el) el.className='ps'+(i<7?' done':i===7?' act':'');}
+    buildViews();
+    planApproved=true;
+    ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id){var t=document.getElementById(id);if(t){t.classList.remove('locked-tab');t.classList.add('unlocked');}});
+    buildShop(); buildCost(); buildNutr(); buildSupps();
+    var bar=document.getElementById('approveBar');
+    if(bar){
+      bar.style.background='#E1F5EE';bar.style.borderColor='#1D9E75';
+      var barMsg='<div style="font-size:14px;color:#0F6E56"><strong>&#10003; Plan loaded.</strong> Generate a new week whenever you are ready.</div>';
+      var barBtn='<button class="btn pri" onclick="regenPlan()">&#8635; New week</button>';
+      bar.innerHTML=barMsg+barBtn;
+    }
+    window.scrollTo(0,0);
+  } catch(e) {
+    if(latestEl) latestEl.style.opacity='1';
+    alert('Could not load plan: '+(e.message||'Unknown error'));
+  }
+}
+
+function relabelForConsumer() {
+  if (!isConsumer()) return;
+  var saveBtn = document.getElementById('saveBtn');
+  if(saveBtn) saveBtn.textContent = 'Save plan';
+  var regenBtn = document.getElementById('regenBtn');
+  if(regenBtn) regenBtn.textContent = 'New week';
+}
+
+
 function showHome(){
   document.getElementById('plannerWrap').style.display='none';
-  document.getElementById('homeScreen').classList.add('active');
-  loadSavedProfiles();
+  if(isConsumer()) {
+    document.getElementById('homeScreen').classList.remove('active');
+    showConsumerHome();
+  } else {
+    document.getElementById('consumerHome').classList.remove('active');
+    document.getElementById('homeScreen').classList.add('active');
+    loadSavedProfiles();
+  }
 }
 
 // ── STARTUP ────────────────────────────────────────────
