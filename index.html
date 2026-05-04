@@ -418,8 +418,9 @@ textarea{resize:vertical;min-height:52px}
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:10px">
     <div id="clientBadge" style="display:inline-flex;align-items:center;gap:6px;background:#E1F5EE;color:#0F6E56;padding:4px 14px;border-radius:20px;font-size:13px"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn pri" id="regenBtn" onclick="regenPlan()">&#8635; New plan</button>
       <button class="btn" id="saveBtn" onclick="saveProfile()">Save client</button>
-      <button class="btn" onclick="showHome()">← All clients</button>
+      <button class="btn" onclick="showHome()">&#8592; All clients</button>
     </div>
   </div>
   <div class="stat-grid" id="statGrid"></div>
@@ -445,8 +446,8 @@ textarea{resize:vertical;min-height:52px}
   <div class="tp" id="tp-supps"><div id="suppsView"></div></div>
   <div class="tp" id="tp-client"><div id="clientView"></div></div>
   <div class="brow">
-    <button class="btn" onclick="goS(1)">← Edit</button>
-    <button class="btn pri" onclick="exportIcal()">Add to calendar</button>
+    <button class="btn" onclick="updateSettings()">&#9998; Update settings</button>
+    <button class="btn" onclick="exportIcal()">Add to calendar</button>
   </div>
 </div>
 
@@ -663,6 +664,55 @@ function getDaySchedule(){
 }
 
 // ── PLAN GENERATION ────────────────────────────────────
+// -- REGENERATE & UPDATE --
+function regenPlan() {
+  if(!APP.client || !APP.client.fname) { alert('No client loaded.'); return; }
+  // Reset approval state and re-lock tabs
+  planApproved = false;
+  ['tab-shop','tab-cost','tab-nutr','tab-supps'].forEach(function(id){
+    var t=document.getElementById(id); if(t){t.classList.add('locked-tab');t.classList.remove('unlocked','on');}
+  });
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
+  document.querySelectorAll('.tp').forEach(function(p){p.classList.remove('on');});
+  var tpPlan=document.getElementById('tp-plan'); if(tpPlan) tpPlan.classList.add('on');
+  var firstTab=document.querySelector('.tab:not(.locked-tab)'); if(firstTab) firstTab.classList.add('on');
+  var bar=document.getElementById('approveBar');
+  if(bar){bar.style.background='#E1F5EE';bar.style.borderColor='';var approveHTML='<div style="font-size:14px;color:#0F6E56"><strong>Review your plan.</strong> Swap any meals, then approve to generate your shopping list.</div><button class="btn pri" onclick="approvePlan()">&#10003; Approve plan</button>';bar.innerHTML=approveHTML;}
+  // Show generating screen
+  document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
+  curStep=6; document.getElementById('s6').classList.add('active');
+  document.getElementById('genTxt').textContent='Generating fresh plan...';
+  document.getElementById('genSub').textContent='Keeping your saved settings';
+  var msgs=['Calculating nutritional targets...','Planning meals for the week...','Checking macro balance...','Building shopping quantities...','Finalising supplements...'];
+  var mi=0; var iv=setInterval(function(){mi++;if(mi<msgs.length)document.getElementById('genSub').textContent=msgs[mi];},1400);
+  api('/api/plans/generate','POST',{clientData:APP.client,children:APP.children,sharingMode:APP.sharingMode,daySchedule:APP.daySchedule,retailer:APP.retailer,tier:APP.tier,clientProfileId:editingProfileId||null})
+  .then(function(data){
+    clearInterval(iv);
+    if(!data.success){document.getElementById('genTxt').textContent='Something went wrong.';document.getElementById('genSub').textContent=data.error||'Please try again.';return;}
+    var p=data.plan;
+    APP.plan=p.days||[];APP.shopping=p.shopping||{};APP.supplements=p.supplements||[];APP.nutrients=p.nutrients_weekly||{};
+    APP.macros={tdee:p.tdee,training_kcal:p.training_day_kcal,rest_kcal:p.rest_day_kcal};
+    APP.trainingDayMacros=p.training_day_macros||{};APP.restDayMacros=p.rest_day_macros||{};
+    APP.nutrientNotes=p.nutrient_notes||'';APP.costSummary=p.cost_summary||{};APP.fuellingGuide=p.fuelling_guide||{};
+    document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
+    document.getElementById('s7').classList.add('active'); curStep=7;
+    for(var i=1;i<=8;i++){var el=document.getElementById('ps'+i);if(el) el.className='ps'+(i<7?' done':i===7?' act':'');}
+    buildViews();
+  }).catch(function(){
+    clearInterval(iv);
+    document.getElementById('genTxt').textContent='Connection error.';
+    document.getElementById('genSub').textContent='Please try again.';
+  });
+}
+
+function updateSettings() {
+  populateFormFromProfile();
+  document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
+  curStep=1; document.getElementById('s1').classList.add('active');
+  for(var i=1;i<=8;i++){var el=document.getElementById('ps'+i);if(el) el.className='ps'+(i===1?' act':'');}
+  window.scrollTo(0,0);
+}
+
 // -- ADULT2 SPORTS --
 var showAdult2Sports = false;
 function setA2Sports(v) {
