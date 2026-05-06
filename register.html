@@ -388,6 +388,151 @@
     margin-top: 8px;
   }
 
+  /* RACE READY ADD-ON */
+  .addon-row {
+    background: var(--white);
+    border: 2px solid var(--rule);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+  .addon-row:hover { border-color: var(--green-accent); }
+  .addon-row.checked {
+    border-color: var(--green-primary);
+    background: #f4faf6;
+    box-shadow: 0 0 0 3px rgba(26,143,90,0.08);
+  }
+  .addon-row.locked {
+    cursor: default;
+    background: #f4faf6;
+    border-color: var(--green-accent);
+  }
+  .addon-row.locked:hover { border-color: var(--green-accent); }
+
+  .addon-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 2px solid var(--grey-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.18s;
+    background: var(--white);
+  }
+  .addon-row.checked .addon-check,
+  .addon-row.locked .addon-check {
+    background: var(--green-primary);
+    border-color: var(--green-primary);
+    color: var(--white);
+  }
+  .addon-check::after {
+    content: '';
+    width: 10px;
+    height: 6px;
+    border-left: 2px solid var(--white);
+    border-bottom: 2px solid var(--white);
+    transform: rotate(-45deg) translate(1px,-1px);
+    opacity: 0;
+    transition: opacity 0.18s;
+  }
+  .addon-row.checked .addon-check::after,
+  .addon-row.locked .addon-check::after {
+    opacity: 1;
+  }
+
+  .addon-info {}
+  .addon-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .addon-title-emoji { font-size: 14px; }
+  .addon-tagline {
+    font-size: 12.5px;
+    color: var(--grey);
+    line-height: 1.4;
+  }
+  .addon-included-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #d6f0e0;
+    color: #1a6e45;
+    margin-left: 4px;
+  }
+
+  .addon-price {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .addon-price-amount {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .addon-price-period {
+    font-size: 11px;
+    color: var(--grey);
+    display: block;
+    margin-top: 1px;
+  }
+
+  /* Variant tabs (monthly vs 8-week block) — shown when addon is checked */
+  .addon-variants {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+    grid-column: 1 / -1;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .addon-row.checked .addon-variants {
+    display: grid;
+  }
+  .addon-row.locked .addon-variants {
+    display: none;
+  }
+  .addon-variant {
+    border: 1.5px solid var(--rule);
+    background: var(--white);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: border-color 0.18s, background 0.18s;
+    line-height: 1.35;
+  }
+  .addon-variant.selected {
+    border-color: var(--green-primary);
+    background: #f4faf6;
+  }
+  .addon-variant-name {
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 1px;
+  }
+  .addon-variant-meta {
+    color: var(--grey);
+    font-size: 11.5px;
+  }
+
   .submit-btn {
     width: 100%;
     padding: 15px;
@@ -637,11 +782,42 @@
           <span class="order-label">7-day free trial</span>
           <span class="order-value" style="color:var(--green-primary)">−£9.99</span>
         </div>
+        <div class="order-row" id="summaryAddonRow" style="display:none;">
+          <span class="order-label" id="summaryAddonLabel">Race Ready add-on</span>
+          <span class="order-value" id="summaryAddonValue">£4.99/month</span>
+        </div>
         <div class="order-row total">
           <span class="order-label">Due today</span>
           <span class="order-value" id="summaryDue">£0.00</span>
         </div>
         <div class="order-trial" id="summaryTrialNote">Then £9.99/month from day 8. Cancel anytime before.</div>
+      </div>
+
+      <!-- RACE READY ADD-ON -->
+      <div class="addon-row" id="addonRow" onclick="toggleAddon()">
+        <div class="addon-check"></div>
+        <div class="addon-info">
+          <div class="addon-title">
+            <span class="addon-title-emoji">🏃</span>
+            <span>Race Ready</span>
+            <span class="addon-included-badge" id="addonIncludedBadge" style="display:none;">Included</span>
+          </div>
+          <div class="addon-tagline" id="addonTagline">Carb loading, race-week plans &amp; long-day fuelling</div>
+        </div>
+        <div class="addon-price" id="addonPrice">
+          <div class="addon-price-amount">£4.99</div>
+          <span class="addon-price-period">/month</span>
+        </div>
+        <div class="addon-variants" id="addonVariants" onclick="event.stopPropagation();">
+          <div class="addon-variant selected" id="addonVariantMonthly" onclick="setAddonVariant('monthly')">
+            <div class="addon-variant-name">£4.99/month</div>
+            <div class="addon-variant-meta">Ongoing — cancel anytime</div>
+          </div>
+          <div class="addon-variant" id="addonVariantBlock" onclick="setAddonVariant('block')">
+            <div class="addon-variant-name">£9.99 one-off</div>
+            <div class="addon-variant-meta">8-week race block</div>
+          </div>
+        </div>
       </div>
 
       <div class="form-section-label">Your details</div>
@@ -705,6 +881,8 @@ const STRIPE_PUBLISHABLE_KEY = 'pk_test_REPLACE_WITH_YOUR_STRIPE_KEY';
 // ---- STATE ----
 var selectedPlan = 'everyday';
 var selectedBilling = 'monthly';
+var selectedAddon = false;          // is Race Ready add-on chosen?
+var selectedAddonVariant = 'monthly'; // 'monthly' (£4.99/mo) or 'block' (£9.99 one-off)
 var stripe = null;
 var cardElement = null;
 
@@ -713,6 +891,12 @@ var PLANS = {
   taster:   { monthly: { price: '£4.99', due: '£4.99', period: '£4.99/month', trial: false, trialNote: '' }, annual: { price: '£4.99', due: '£4.99', period: '£4.99/month', trial: false, trialNote: 'Monthly only' }, label: 'Taster' },
   everyday: { monthly: { price: '£9.99', due: '£0.00', period: '£9.99/month', trial: true, trialNote: 'Then £9.99/month from day 8. Cancel anytime before.' }, annual: { price: '£8.25', due: '£0.00', period: '£99/year', trial: true, trialNote: 'Then £99/year after trial. Cancel anytime before.' }, label: 'Everyday' },
   family:   { monthly: { price: '£14.99', due: '£14.99', period: '£14.99/month', trial: false, trialNote: '' }, annual: { price: '£12.42', due: '£149.00', period: '£149/year', trial: false, trialNote: '' }, label: 'Family' }
+};
+
+// ---- ADD-ON DATA ----
+var ADDONS = {
+  monthly: { label: 'Race Ready add-on', price: '£4.99/month', amount: 4.99, type: 'recurring' },
+  block:   { label: 'Race Ready (8-week block)', price: '£9.99 one-off', amount: 9.99, type: 'one-off' }
 };
 
 var ANNUAL_NOTES = {
@@ -766,6 +950,66 @@ function selectPlan(plan) {
   selectedPlan = plan;
   document.querySelectorAll('.plan-card').forEach(function(c) { c.classList.remove('selected'); });
   document.getElementById('card-' + plan).classList.add('selected');
+  refreshAddonRow();
+  updateOrderSummary();
+}
+
+// ---- ADD-ON UI ----
+function refreshAddonRow() {
+  var row = document.getElementById('addonRow');
+  var badge = document.getElementById('addonIncludedBadge');
+  var price = document.getElementById('addonPrice');
+  var tagline = document.getElementById('addonTagline');
+
+  // Reset states
+  row.classList.remove('checked', 'locked');
+  row.style.display = 'grid';
+  badge.style.display = 'none';
+  price.style.display = 'block';
+  tagline.textContent = 'Carb loading, race-week plans & long-day fuelling';
+
+  if (selectedPlan === 'taster') {
+    // Taster doesn't get add-ons
+    row.style.display = 'none';
+    selectedAddon = false;
+  } else if (selectedPlan === 'family') {
+    // Family includes Race Ready free — locked on
+    row.classList.add('locked');
+    badge.style.display = 'inline-block';
+    price.style.display = 'none';
+    tagline.textContent = 'Included free with your Family plan';
+    selectedAddon = true; // sent to backend so customer record reflects it
+  } else {
+    // Everyday — optional add-on
+    if (selectedAddon) {
+      row.classList.add('checked');
+      // Update price display based on chosen variant
+      var v = ADDONS[selectedAddonVariant];
+      price.querySelector('.addon-price-amount').textContent = '£' + v.amount.toFixed(2);
+      price.querySelector('.addon-price-period').textContent = v.type === 'recurring' ? '/month' : 'one-off';
+      // Refresh variant selection
+      document.getElementById('addonVariantMonthly').classList.toggle('selected', selectedAddonVariant === 'monthly');
+      document.getElementById('addonVariantBlock').classList.toggle('selected', selectedAddonVariant === 'block');
+    } else {
+      // Reset price display to default monthly
+      price.querySelector('.addon-price-amount').textContent = '£4.99';
+      price.querySelector('.addon-price-period').textContent = '/month';
+    }
+  }
+}
+
+function toggleAddon() {
+  // Don't toggle when locked (Family) or hidden (Taster)
+  if (selectedPlan === 'family' || selectedPlan === 'taster') return;
+  selectedAddon = !selectedAddon;
+  refreshAddonRow();
+  updateOrderSummary();
+}
+
+function setAddonVariant(variant) {
+  if (variant !== 'monthly' && variant !== 'block') return;
+  selectedAddonVariant = variant;
+  refreshAddonRow();
   updateOrderSummary();
 }
 
@@ -780,24 +1024,77 @@ function updateOrderSummary() {
   var summaryHtml = document.getElementById('orderSummary');
   var trialRow = summaryHtml.querySelectorAll('.order-row')[1];
 
+  // Determine if Race Ready is being charged (Everyday + addon selected)
+  // Family includes it free — not a separate charge
+  // Taster never offers it
+  var addonChargeable = (selectedPlan === 'everyday' && selectedAddon);
+  var addonRow = document.getElementById('summaryAddonRow');
+  var addonLabel = document.getElementById('summaryAddonLabel');
+  var addonValue = document.getElementById('summaryAddonValue');
+
+  if (addonChargeable) {
+    var v = ADDONS[selectedAddonVariant];
+    addonRow.style.display = 'flex';
+    addonLabel.textContent = v.label;
+    addonValue.textContent = v.price;
+  } else {
+    addonRow.style.display = 'none';
+  }
+
   if (p.trial) {
+    // Trial flow (Everyday only)
     trialRow.style.display = 'flex';
     trialRow.querySelector('.order-value').textContent = selectedBilling === 'annual' ? '-£99.00' : '-£9.99';
-    document.getElementById('summaryDue').textContent = '£0.00';
-    document.getElementById('summaryTrialNote').textContent = p.trialNote;
+
+    // Due today: addon (if recurring) is also free during trial; one-off block charges immediately
+    var dueToday = 0;
+    if (addonChargeable && selectedAddonVariant === 'block') {
+      dueToday = ADDONS.block.amount;
+    }
+    document.getElementById('summaryDue').textContent = '£' + dueToday.toFixed(2);
+
+    // Trial note — extend to mention add-on if applicable
+    var trialNote = p.trialNote;
+    if (addonChargeable && selectedAddonVariant === 'monthly') {
+      trialNote += ' Race Ready (£4.99/mo) also free during trial.';
+    } else if (addonChargeable && selectedAddonVariant === 'block') {
+      trialNote += ' Race Ready 8-week block charged today.';
+    }
+    document.getElementById('summaryTrialNote').textContent = trialNote;
     document.getElementById('summaryTrialNote').style.display = 'block';
     document.getElementById('formSubtitle').textContent = 'Start your 7-day free trial of ' + planLabel;
     document.getElementById('submitLabel').textContent = 'Start free trial';
-    document.getElementById('submitNote').innerHTML = 'No charge today. ' + p.period + ' from day 8 unless cancelled.<br>By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.';
+
+    var noteHtml = 'No charge today';
+    if (dueToday > 0) noteHtml = 'Charged today: £' + dueToday.toFixed(2) + ' (Race Ready 8-week block)';
+    noteHtml += '. ' + p.period + ' from day 8 unless cancelled.';
+    if (addonChargeable && selectedAddonVariant === 'monthly') noteHtml += ' Race Ready add-on £4.99/month from day 8.';
+    noteHtml += '<br>By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.';
+    document.getElementById('submitNote').innerHTML = noteHtml;
+
     var trialNoteEl = document.getElementById('trial-note-everyday');
-    if(plan === 'everyday' && trialNoteEl) trialNoteEl.style.display = 'block';
+    if (selectedPlan === 'everyday' && trialNoteEl) trialNoteEl.style.display = 'block';
   } else {
+    // Non-trial flow (Taster, Family)
     trialRow.style.display = 'none';
-    document.getElementById('summaryDue').textContent = p.due;
+
+    // Plan price + add-on (if applicable, but Family includes it free, Taster has none)
+    // For Everyday with add-on selected outside trial — shouldn't really happen since Everyday always has trial,
+    // but safe to handle: charge plan + addon
+    var planAmount = parseFloat(p.due.replace('£','')) || 0;
+    var addonAmount = 0;
+    if (addonChargeable) addonAmount = ADDONS[selectedAddonVariant].amount;
+    var totalDue = planAmount + addonAmount;
+    document.getElementById('summaryDue').textContent = '£' + totalDue.toFixed(2);
+
     document.getElementById('summaryTrialNote').style.display = 'none';
     document.getElementById('formSubtitle').textContent = 'Create your ' + planLabel + ' account';
-    document.getElementById('submitLabel').textContent = 'Subscribe — ' + p.due;
-    document.getElementById('submitNote').innerHTML = 'You will be charged ' + p.period + '.<br>By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.';
+    document.getElementById('submitLabel').textContent = 'Subscribe — £' + totalDue.toFixed(2);
+
+    var note = 'You will be charged ' + p.period + '.';
+    if (addonChargeable) note += ' Plus Race Ready ' + ADDONS[selectedAddonVariant].price + '.';
+    note += '<br>By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.';
+    document.getElementById('submitNote').innerHTML = note;
   }
 }
 
@@ -844,6 +1141,15 @@ async function handleSubmit() {
     }
   }
 
+  // Determine addon to send to backend
+  // Family always gets race-ready (included), Everyday only if user opted in, Taster never
+  var addonToSend = null;
+  if (selectedPlan === 'family') {
+    addonToSend = 'race-ready-included'; // included free with Family
+  } else if (selectedPlan === 'everyday' && selectedAddon) {
+    addonToSend = selectedAddonVariant === 'block' ? 'race-ready-block' : 'race-ready-monthly';
+  }
+
   // Register account
   try {
     var regRes = await fetch(BACKEND + '/api/auth/register', {
@@ -856,6 +1162,7 @@ async function handleSubmit() {
         role: 'consumer',
         plan: selectedPlan,
         billing: selectedBilling,
+        addon: addonToSend,
         paymentMethodId: paymentMethodId
       })
     });
@@ -897,31 +1204,55 @@ function showSuccess() {
   var s = document.getElementById('successView');
   s.style.display = 'block';
   var p = PLANS[selectedPlan][selectedBilling];
+
+  // Build addon note for success screen
+  var addonNote = '';
+  if (selectedPlan === 'family') {
+    addonNote = ' Race Ready is included.';
+  } else if (selectedPlan === 'everyday' && selectedAddon) {
+    addonNote = selectedAddonVariant === 'block'
+      ? ' Your 8-week Race Ready block is active.'
+      : ' Race Ready add-on is active.';
+  }
+
   if (p.trial) {
-    document.getElementById('successMsg').textContent = 'Your 7-day free trial of ' + PLANS[selectedPlan].label + ' has started. No charge until day 8.';
+    document.getElementById('successMsg').textContent =
+      'Your 7-day free trial of ' + PLANS[selectedPlan].label + ' has started. No charge until day 8.' + addonNote;
   } else {
-    document.getElementById('successMsg').textContent = 'Your ' + PLANS[selectedPlan].label + ' account is ready. Start planning your week.';
+    document.getElementById('successMsg').textContent =
+      'Your ' + PLANS[selectedPlan].label + ' account is ready.' + addonNote + ' Start planning your week.';
   }
 }
 
-// ---- URL PARAMS — pre-select plan from pricing page ----
+// ---- URL PARAMS — pre-select plan and add-on from pricing page ----
 function readUrlParams() {
   var params = new URLSearchParams(window.location.search);
   var plan = params.get('plan');
+  var addon = params.get('addon');
+
+  // Handle add-on parameter — implies Everyday plan (Race Ready needs Everyday or Family)
+  if (addon === 'race-ready-monthly') {
+    selectedAddon = true;
+    selectedAddonVariant = 'monthly';
+    if (!plan) plan = 'everyday';
+  } else if (addon === 'race-ready-block') {
+    selectedAddon = true;
+    selectedAddonVariant = 'block';
+    if (!plan) plan = 'everyday';
+  }
+
+  // Apply plan selection
   if (plan === 'taster') selectPlan('taster');
   else if (plan === 'family') selectPlan('family');
   else if (plan === 'everyday-trial' || plan === 'everyday') selectPlan('everyday');
-  var addon = params.get('addon');
-  if (addon) {
-    // Handle add-on links from pricing page — default to everyday with note
-    selectPlan('everyday');
-  }
+  else if (selectedAddon) selectPlan('everyday'); // addon without plan defaults to Everyday
 }
 
 // ---- INIT ----
 window.addEventListener('DOMContentLoaded', function() {
   initStripe();
   readUrlParams();
+  refreshAddonRow();
   updateOrderSummary();
 });
 </script>
