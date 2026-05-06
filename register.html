@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get started — Meal Plan Pro</title>
+<meta name="description" content="Start your free 7-day trial of Meal Plan Pro. No card charged until day 8.">
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+  :root {
+    --green-primary: #1a8f5a;
+    --green-primary-dark: #15784a;
+    --green-accent: #3da972;
+    --cream: #f4ede4;
+    --cream-deep: #ebe1d2;
+    --white: #ffffff;
+    --ink: #1f1f1f;
+    --ink-soft: #3d3d3d;
+    --grey: #7d7d7d;
+    --grey-light: #b8b3a9;
+    --rule: #e2dccf;
+    --error: #c0392b;
+    --error-bg: #fdf0ee;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 16px;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding: 20px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(244,237,228,0.96);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .logo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .logo span { color: var(--green-accent); }
+
+  .header-login {
+    font-size: 14px;
+    color: var(--grey);
+  }
+  .header-login a {
+    color: var(--green-primary);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* LAYOUT */
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 48px;
+    align-items: start;
+  }
+
+  /* LEFT — PLAN SELECTION */
+  .plan-col h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .plan-col h1 span { color: var(--green-accent); }
+
+  .plan-col-sub {
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin-bottom: 28px;
+  }
+
+  /* BILLING TOGGLE */
+  .billing-toggle {
+    display: inline-flex;
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 4px;
+    margin-bottom: 20px;
+  }
+
+  .billing-btn {
+    background: transparent;
+    border: none;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    border-radius: 999px;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .billing-btn.active {
+    background: var(--green-primary);
+    color: var(--white);
+    font-weight: 600;
+  }
+  .billing-btn .save-badge {
+    background: rgba(255,255,255,0.25);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+  .billing-btn:not(.active) .save-badge {
+    background: #d6f0e0;
+    color: #2a7a4d;
+  }
+
+  /* PLAN CARDS */
+  .plan-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .plan-card {
+    background: var(--white);
+    border: 2px solid var(--rule);
+    border-radius: 12px;
+    padding: 20px 22px;
+    cursor: pointer;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    gap: 14px;
+    align-items: start;
+  }
+  .plan-card:hover { border-color: var(--green-accent); }
+  .plan-card.selected {
+    border-color: var(--green-primary);
+    box-shadow: 0 0 0 3px rgba(26,143,90,0.1);
+  }
+
+  .plan-radio {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--grey-light);
+    margin-top: 2px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.18s;
+  }
+  .plan-card.selected .plan-radio {
+    border-color: var(--green-primary);
+    background: var(--green-primary);
+  }
+  .plan-card.selected .plan-radio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--white);
+  }
+
+  .plan-info {}
+  .plan-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .plan-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .plan-badge {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #d6f0e0;
+    color: #1a6e45;
+  }
+  .plan-tagline {
+    font-size: 13.5px;
+    color: var(--grey);
+    margin-bottom: 10px;
+    line-height: 1.45;
+  }
+  .plan-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .plan-feature-chip {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    background: var(--cream);
+    padding: 3px 9px;
+    border-radius: 6px;
+    border: 1px solid var(--rule);
+  }
+  .plan-trial-note {
+    font-size: 12.5px;
+    color: var(--green-primary);
+    font-weight: 500;
+    margin-top: 8px;
+  }
+
+  .plan-price {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .plan-price-amount {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .plan-price-period {
+    font-size: 13px;
+    color: var(--grey);
+    display: block;
+    margin-top: 2px;
+  }
+  .plan-price-annual {
+    font-size: 12px;
+    color: var(--green-primary);
+    font-weight: 600;
+    display: block;
+    margin-top: 3px;
+  }
+
+  /* TRUST ITEMS */
+  .trust-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--grey);
+  }
+  .trust-item svg { color: var(--green-primary); flex-shrink: 0; }
+
+  /* RIGHT — FORM */
+  .form-col {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    padding: 32px;
+    position: sticky;
+    top: 88px;
+  }
+
+  .form-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .form-subtitle {
+    font-size: 14px;
+    color: var(--grey);
+    margin-bottom: 24px;
+  }
+
+  .form-section-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--grey);
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+  .form-section-label:first-of-type { margin-top: 0; }
+
+  .field {
+    margin-bottom: 14px;
+  }
+  .field label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 5px;
+  }
+  .field input {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.18s;
+  }
+  .field input:focus { border-color: var(--green-primary); }
+  .field input::placeholder { color: var(--grey-light); }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* STRIPE CARD */
+  .stripe-field {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 13px;
+    background: var(--white);
+    transition: border-color 0.18s;
+    margin-bottom: 14px;
+  }
+  .stripe-field.focused { border-color: var(--green-primary); }
+  .stripe-field-label {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  /* ORDER SUMMARY */
+  .order-summary {
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .order-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+  }
+  .order-row.total {
+    border-top: 1px solid var(--rule);
+    margin-top: 6px;
+    padding-top: 10px;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .order-label { color: var(--ink-soft); }
+  .order-value { font-weight: 600; color: var(--ink); }
+  .order-trial {
+    font-size: 12.5px;
+    color: var(--green-primary);
+    font-weight: 500;
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--green-primary);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    font-size: 15.5px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .submit-btn:hover { background: var(--green-primary-dark); }
+  .submit-btn:disabled { background: var(--grey-light); cursor: not-allowed; }
+
+  .submit-note {
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--grey);
+    line-height: 1.5;
+  }
+  .submit-note a { color: var(--green-primary); text-decoration: none; }
+
+  .stripe-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--grey-light);
+  }
+
+  /* ERROR */
+  .error-box {
+    background: var(--error-bg);
+    border: 1px solid #f0c2bb;
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: var(--error);
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* SUCCESS */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 16px 0;
+  }
+  .success-icon {
+    width: 64px;
+    height: 64px;
+    background: #d6f0e0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 28px;
+  }
+  .success-screen h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .success-screen p {
+    font-size: 14.5px;
+    color: var(--grey);
+    margin-bottom: 20px;
+  }
+  .success-btn {
+    display: inline-block;
+    background: var(--green-primary);
+    color: var(--white);
+    padding: 13px 28px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .success-btn:hover { background: var(--green-primary-dark); }
+
+  /* SPINNER */
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESPONSIVE */
+  @media (max-width: 860px) {
+    header { padding: 16px 20px; }
+    .page {
+      grid-template-columns: 1fr;
+      padding: 32px 16px 60px;
+      gap: 32px;
+    }
+    .form-col { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="pricing.html" class="logo">Meal Plan <span>Pro</span></a>
+  <div class="header-login">Already have an account? <a href="https://meal-plan-frontend-4tsb.onrender.com">Log in</a></div>
+</header>
+
+<div class="page">
+
+  <!-- LEFT: PLAN SELECTION -->
+  <div class="plan-col">
+    <h1>Start planning your <span>perfect week.</span></h1>
+    <p class="plan-col-sub">Choose the plan that fits your household. Switch or cancel anytime.</p>
+
+    <div class="billing-toggle">
+      <button class="billing-btn active" data-billing="monthly" onclick="setBilling('monthly')">Monthly</button>
+      <button class="billing-btn" data-billing="annual" onclick="setBilling('annual')">
+        Annual
+        <span class="save-badge">Save 17%</span>
+      </button>
+    </div>
+
+    <div class="plan-cards">
+
+      <!-- TASTER -->
+      <div class="plan-card" id="card-taster" onclick="selectPlan('taster')">
+        <div class="plan-radio" id="radio-taster"></div>
+        <div class="plan-info">
+          <div class="plan-header">
+            <div class="plan-name">Taster</div>
+          </div>
+          <div class="plan-tagline">Try AI meal planning without the commitment.</div>
+          <div class="plan-features">
+            <span class="plan-feature-chip">2 plans/month</span>
+            <span class="plan-feature-chip">3-day plans</span>
+            <span class="plan-feature-chip">Smart shopping list</span>
+            <span class="plan-feature-chip">Unlimited swaps</span>
+          </div>
+        </div>
+        <div class="plan-price">
+          <div class="plan-price-amount" id="price-taster">£4.99</div>
+          <span class="plan-price-period">/month</span>
+          <span class="plan-price-annual" id="annual-note-taster"></span>
+        </div>
+      </div>
+
+      <!-- EVERYDAY -->
+      <div class="plan-card selected" id="card-everyday" onclick="selectPlan('everyday')">
+        <div class="plan-radio" id="radio-everyday"></div>
+        <div class="plan-info">
+          <div class="plan-header">
+            <div class="plan-name">Everyday</div>
+            <span class="plan-badge">Most popular</span>
+          </div>
+          <div class="plan-tagline">For couples and individuals who cook most nights.</div>
+          <div class="plan-features">
+            <span class="plan-feature-chip">6 plans/month</span>
+            <span class="plan-feature-chip">7-day plans</span>
+            <span class="plan-feature-chip">Add a partner</span>
+            <span class="plan-feature-chip">Sports profile</span>
+            <span class="plan-feature-chip">Recipe instructions</span>
+          </div>
+          <div class="plan-trial-note" id="trial-note-everyday">&#10003; 7-day free trial — no card charged until day 8</div>
+        </div>
+        <div class="plan-price">
+          <div class="plan-price-amount" id="price-everyday">£9.99</div>
+          <span class="plan-price-period">/month</span>
+          <span class="plan-price-annual" id="annual-note-everyday"></span>
+        </div>
+      </div>
+
+      <!-- FAMILY -->
+      <div class="plan-card" id="card-family" onclick="selectPlan('family')">
+        <div class="plan-radio" id="radio-family"></div>
+        <div class="plan-info">
+          <div class="plan-header">
+            <div class="plan-name">Family</div>
+          </div>
+          <div class="plan-tagline">For households juggling kids, adult goals, and busy weeks.</div>
+          <div class="plan-features">
+            <span class="plan-feature-chip">12 plans/month</span>
+            <span class="plan-feature-chip">14-day plans</span>
+            <span class="plan-feature-chip">Up to 6 children</span>
+            <span class="plan-feature-chip">Race Ready included</span>
+            <span class="plan-feature-chip">School lunch handling</span>
+          </div>
+        </div>
+        <div class="plan-price">
+          <div class="plan-price-amount" id="price-family">£14.99</div>
+          <span class="plan-price-period">/month</span>
+          <span class="plan-price-annual" id="annual-note-family"></span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="trust-row">
+      <div class="trust-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.5 6.5l-4 4a.75.75 0 01-1.06 0l-2-2a.75.75 0 011.06-1.06L7 8.94l3.47-3.47a.75.75 0 011.06 1.06z"/></svg>
+        Cancel anytime
+      </div>
+      <div class="trust-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.5 6.5l-4 4a.75.75 0 01-1.06 0l-2-2a.75.75 0 011.06-1.06L7 8.94l3.47-3.47a.75.75 0 011.06 1.06z"/></svg>
+        Stripe encrypted payment
+      </div>
+      <div class="trust-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.5 6.5l-4 4a.75.75 0 01-1.06 0l-2-2a.75.75 0 011.06-1.06L7 8.94l3.47-3.47a.75.75 0 011.06 1.06z"/></svg>
+        EU data storage
+      </div>
+      <div class="trust-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.5 6.5l-4 4a.75.75 0 01-1.06 0l-2-2a.75.75 0 011.06-1.06L7 8.94l3.47-3.47a.75.75 0 011.06 1.06z"/></svg>
+        Works on any device
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: REGISTRATION FORM -->
+  <div class="form-col">
+    <!-- FORM VIEW -->
+    <div id="formView">
+      <div class="form-title">Create your account</div>
+      <div class="form-subtitle" id="formSubtitle">Start your 7-day free trial of Everyday</div>
+
+      <div id="errorBox" class="error-box"></div>
+
+      <!-- ORDER SUMMARY -->
+      <div class="order-summary" id="orderSummary">
+        <div class="order-row">
+          <span class="order-label" id="summaryPlan">Everyday (monthly)</span>
+          <span class="order-value" id="summaryPrice">£9.99/month</span>
+        </div>
+        <div class="order-row">
+          <span class="order-label">7-day free trial</span>
+          <span class="order-value" style="color:var(--green-primary)">−£9.99</span>
+        </div>
+        <div class="order-row total">
+          <span class="order-label">Due today</span>
+          <span class="order-value" id="summaryDue">£0.00</span>
+        </div>
+        <div class="order-trial" id="summaryTrialNote">Then £9.99/month from day 8. Cancel anytime before.</div>
+      </div>
+
+      <div class="form-section-label">Your details</div>
+      <div class="field-row">
+        <div class="field">
+          <label>First name</label>
+          <input type="text" id="firstName" placeholder="Sarah" autocomplete="given-name"/>
+        </div>
+        <div class="field">
+          <label>Last name</label>
+          <input type="text" id="lastName" placeholder="Thompson" autocomplete="family-name"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="emailInput" placeholder="sarah@example.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="passwordInput" placeholder="At least 8 characters" autocomplete="new-password"/>
+      </div>
+
+      <div class="form-section-label">Payment details</div>
+      <div class="stripe-field" id="cardWrapper">
+        <div class="stripe-field-label">Card number</div>
+        <div id="cardElement"><!-- Stripe mounts here --></div>
+      </div>
+
+      <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">
+        <span id="submitLabel">Start free trial</span>
+      </button>
+
+      <div class="submit-note" id="submitNote">
+        No charge today. £9.99 from day 8 unless cancelled.
+        <br>By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
+      </div>
+
+      <div class="stripe-badge">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="var(--grey-light)"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 11.5H7v-5h2v5zm0-6.5H7V3h2v2z"/></svg>
+        Secured by Stripe
+      </div>
+    </div>
+
+    <!-- SUCCESS VIEW -->
+    <div class="success-screen" id="successView">
+      <div class="success-icon">&#127859;</div>
+      <h3>You're all set!</h3>
+      <p id="successMsg">Your free trial has started. No charge until day 8.</p>
+      <a href="https://meal-plan-frontend-4tsb.onrender.com" class="success-btn">Go to Meal Plan Pro &#8594;</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ---- CONFIG ----
+const BACKEND = 'https://meal-plan-backend-su6p.onrender.com';
+// Replace with your real Stripe publishable key when ready:
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_REPLACE_WITH_YOUR_STRIPE_KEY';
+
+// ---- STATE ----
+var selectedPlan = 'everyday';
+var selectedBilling = 'monthly';
+var stripe = null;
+var cardElement = null;
+
+// ---- PLAN DATA ----
+var PLANS = {
+  taster:   { monthly: { price: '£4.99', due: '£4.99', period: '£4.99/month', trial: false, trialNote: '' }, annual: { price: '£4.99', due: '£4.99', period: '£4.99/month', trial: false, trialNote: 'Monthly only' }, label: 'Taster' },
+  everyday: { monthly: { price: '£9.99', due: '£0.00', period: '£9.99/month', trial: true, trialNote: 'Then £9.99/month from day 8. Cancel anytime before.' }, annual: { price: '£8.25', due: '£0.00', period: '£99/year', trial: true, trialNote: 'Then £99/year after trial. Cancel anytime before.' }, label: 'Everyday' },
+  family:   { monthly: { price: '£14.99', due: '£14.99', period: '£14.99/month', trial: false, trialNote: '' }, annual: { price: '£12.42', due: '£149.00', period: '£149/year', trial: false, trialNote: '' }, label: 'Family' }
+};
+
+var ANNUAL_NOTES = {
+  taster: '',
+  everyday: 'or £99/year — save £20',
+  family: 'or £149/year — save £30'
+};
+
+// ---- STRIPE INIT ----
+function initStripe() {
+  if (STRIPE_PUBLISHABLE_KEY.includes('REPLACE')) {
+    document.getElementById('cardElement').innerHTML = '<div style="font-size:13px;color:#888;padding:4px 0;font-style:italic">Card input — add Stripe key to activate</div>';
+    return;
+  }
+  try {
+    stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+    var elements = stripe.elements({ fonts: [{ cssSrc: 'https://fonts.googleapis.com/css?family=Source+Code+Pro' }] });
+    cardElement = elements.create('card', {
+      style: {
+        base: { fontFamily: '"Segoe UI", sans-serif', fontSize: '15px', color: '#1f1f1f', '::placeholder': { color: '#b8b3a9' } },
+        invalid: { color: '#c0392b' }
+      }
+    });
+    cardElement.mount('#cardElement');
+    cardElement.on('focus', function(){ document.getElementById('cardWrapper').classList.add('focused'); });
+    cardElement.on('blur', function(){ document.getElementById('cardWrapper').classList.remove('focused'); });
+  } catch(e) {
+    console.error('Stripe init error:', e);
+  }
+}
+
+// ---- UI FUNCTIONS ----
+function setBilling(billing) {
+  selectedBilling = billing;
+  document.querySelectorAll('.billing-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.billing === billing);
+  });
+  // Update prices
+  document.getElementById('price-taster').textContent = billing === 'annual' ? '£4.99' : '£4.99';
+  document.getElementById('price-everyday').textContent = billing === 'annual' ? '£8.25' : '£9.99';
+  document.getElementById('price-family').textContent = billing === 'annual' ? '£12.42' : '£14.99';
+  // Update annual notes
+  document.getElementById('annual-note-taster').textContent = billing === 'annual' ? 'Monthly only' : '';
+  document.getElementById('annual-note-everyday').textContent = billing === 'annual' ? 'Billed £99/year' : 'or £99/year — save £20';
+  document.getElementById('annual-note-family').textContent = billing === 'annual' ? 'Billed £149/year' : 'or £149/year — save £30';
+  // Refresh selected plan summary
+  selectPlan(selectedPlan);
+}
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.querySelectorAll('.plan-card').forEach(function(c) { c.classList.remove('selected'); });
+  document.getElementById('card-' + plan).classList.add('selected');
+  updateOrderSummary();
+}
+
+function updateOrderSummary() {
+  var p = PLANS[selectedPlan][selectedBilling];
+  var planLabel = PLANS[selectedPlan].label;
+  var billingLabel = selectedBilling === 'annual' ? 'annual' : 'monthly';
+
+  document.getElementById('summaryPlan').textContent = planLabel + ' (' + billingLabel + ')';
+  document.getElementById('summaryPrice').textContent = p.period;
+
+  var summaryHtml = document.getElementById('orderSummary');
+  var trialRow = summaryHtml.querySelectorAll('.order-row')[1];
+
+  if (p.trial) {
+    trialRow.style.display = 'flex';
+    trialRow.querySelector('.order-value').textContent = selectedBilling === 'annual' ? '-£99.00' : '-£9.99';
+    document.getElementById('summaryDue').textContent = '£0.00';
+    document.getElementById('summaryTrialNote').textContent = p.trialNote;
+    document.getElementById('summaryTrialNote').style.display = 'block';
+    document.getElementById('formSubtitle').textContent = 'Start your 7-day free trial of ' + planLabel;
+    document.getElementById('submitLabel').textContent = 'Start free trial';
+    document.getElementById('submitNote').innerHTML = 'No charge today. ' + p.period + ' from day 8 unless cancelled.<br>By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.';
+    var trialNoteEl = document.getElementById('trial-note-everyday');
+    if(plan === 'everyday' && trialNoteEl) trialNoteEl.style.display = 'block';
+  } else {
+    trialRow.style.display = 'none';
+    document.getElementById('summaryDue').textContent = p.due;
+    document.getElementById('summaryTrialNote').style.display = 'none';
+    document.getElementById('formSubtitle').textContent = 'Create your ' + planLabel + ' account';
+    document.getElementById('submitLabel').textContent = 'Subscribe — ' + p.due;
+    document.getElementById('submitNote').innerHTML = 'You will be charged ' + p.period + '.<br>By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.';
+  }
+}
+
+// ---- FORM SUBMIT ----
+async function handleSubmit() {
+  var btn = document.getElementById('submitBtn');
+  var errBox = document.getElementById('errorBox');
+  errBox.style.display = 'none';
+
+  var firstName = document.getElementById('firstName').value.trim();
+  var lastName = document.getElementById('lastName').value.trim();
+  var email = document.getElementById('emailInput').value.trim();
+  var password = document.getElementById('passwordInput').value;
+
+  // Validate
+  if (!firstName || !lastName) { showError('Please enter your full name.'); return; }
+  if (!email || !email.includes('@')) { showError('Please enter a valid email address.'); return; }
+  if (password.length < 8) { showError('Password must be at least 8 characters.'); return; }
+
+  // Show spinner
+  btn.disabled = true;
+  document.getElementById('submitLabel').innerHTML = '<div class="spinner"></div>';
+
+  var paymentMethodId = null;
+
+  // If Stripe is active and plan requires payment, get payment method
+  if (stripe && cardElement && (PLANS[selectedPlan][selectedBilling].due !== '£0.00' || !PLANS[selectedPlan][selectedBilling].trial)) {
+    try {
+      var result = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+        billing_details: { name: firstName + ' ' + lastName, email: email }
+      });
+      if (result.error) {
+        showError(result.error.message);
+        resetBtn();
+        return;
+      }
+      paymentMethodId = result.paymentMethod.id;
+    } catch(e) {
+      showError('Card processing error. Please try again.');
+      resetBtn();
+      return;
+    }
+  }
+
+  // Register account
+  try {
+    var regRes = await fetch(BACKEND + '/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: firstName + ' ' + lastName,
+        email: email,
+        password: password,
+        role: 'consumer',
+        plan: selectedPlan,
+        billing: selectedBilling,
+        paymentMethodId: paymentMethodId
+      })
+    });
+    var regData = await regRes.json();
+    if (!regRes.ok || !regData.token) {
+      showError(regData.error || 'Registration failed. Please try again.');
+      resetBtn();
+      return;
+    }
+
+    // Store token and user
+    localStorage.setItem('authToken', regData.token);
+    localStorage.setItem('currentUser', JSON.stringify(regData.user));
+
+    // Show success screen
+    showSuccess();
+
+  } catch(e) {
+    showError('Could not connect to server. Please try again.');
+    resetBtn();
+  }
+}
+
+function showError(msg) {
+  var box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.style.display = 'block';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function resetBtn() {
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  updateOrderSummary(); // resets button label
+}
+
+function showSuccess() {
+  document.getElementById('formView').style.display = 'none';
+  var s = document.getElementById('successView');
+  s.style.display = 'block';
+  var p = PLANS[selectedPlan][selectedBilling];
+  if (p.trial) {
+    document.getElementById('successMsg').textContent = 'Your 7-day free trial of ' + PLANS[selectedPlan].label + ' has started. No charge until day 8.';
+  } else {
+    document.getElementById('successMsg').textContent = 'Your ' + PLANS[selectedPlan].label + ' account is ready. Start planning your week.';
+  }
+}
+
+// ---- URL PARAMS — pre-select plan from pricing page ----
+function readUrlParams() {
+  var params = new URLSearchParams(window.location.search);
+  var plan = params.get('plan');
+  if (plan === 'taster') selectPlan('taster');
+  else if (plan === 'family') selectPlan('family');
+  else if (plan === 'everyday-trial' || plan === 'everyday') selectPlan('everyday');
+  var addon = params.get('addon');
+  if (addon) {
+    // Handle add-on links from pricing page — default to everyday with note
+    selectPlan('everyday');
+  }
+}
+
+// ---- INIT ----
+window.addEventListener('DOMContentLoaded', function() {
+  initStripe();
+  readUrlParams();
+  updateOrderSummary();
+});
+</script>
+</body>
+</html>
