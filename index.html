@@ -190,7 +190,8 @@ textarea{resize:vertical;min-height:52px}
 <div class="topbar">
   <div class="logo">Meal Plan <span>Pro</span></div>
   <div class="user-area">
-    <span id="userEmail" style="display:none"></span>
+    <span id="userEmail" style="display:none;font-size:13px;color:#888;margin-right:4px"></span>
+    <button class="btn-sm" id="accountBtn" style="display:none" onclick="openAccountPanel()">&#9881; Account</button>
     <button class="btn-sm" id="logoutBtn" style="display:none" onclick="logout()">Log out</button>
     <span id="authStatus" style="font-size:13px;color:#888">Not logged in</span>
   </div>
@@ -555,6 +556,7 @@ function logout(){
   document.getElementById('mainApp').style.display='none';
   document.getElementById('userEmail').style.display='none';
   document.getElementById('logoutBtn').style.display='none';
+  document.getElementById('accountBtn').style.display='none';
   document.getElementById('authStatus').textContent='Not logged in';
 }
 
@@ -564,6 +566,7 @@ function showApp(){
   document.getElementById('userEmail').textContent=currentUser.email;
   document.getElementById('userEmail').style.display='inline';
   document.getElementById('logoutBtn').style.display='inline-block';
+  document.getElementById('accountBtn').style.display='inline-block';
   document.getElementById('authStatus').style.display='none';
   console.log('showApp role:', currentUser && currentUser.role);
   if(isConsumer()) {
@@ -721,7 +724,7 @@ function regenPlan() {
   api('/api/plans/generate','POST',{clientData:APP.client,children:APP.children,sharingMode:APP.sharingMode,daySchedule:APP.daySchedule,retailer:APP.retailer,tier:APP.tier,clientProfileId:editingProfileId||null})
   .then(function(data){
     clearInterval(iv);
-    if(!data.success){document.getElementById('genTxt').textContent='Something went wrong.';document.getElementById('genSub').textContent=data.error||'Please try again.';return;}
+    if(!data.success){clearInterval(iv);handleGenError(data);return;}
     var p=data.plan;
     APP.plan=p.days||[];APP.shopping=p.shopping||{};APP.supplements=p.supplements||[];APP.nutrients=p.nutrients_weekly||{};
     APP.macros={tdee:p.tdee,training_kcal:p.training_day_kcal,rest_kcal:p.rest_day_kcal};
@@ -1007,8 +1010,8 @@ async function startGen(){
     });
     clearInterval(iv);
     if(!data.success){
-      document.getElementById('genTxt').textContent='Something went wrong.';
-      document.getElementById('genSub').textContent=data.error||'Please try again.';
+      handleGenError(data);
+      clearInterval(iv);
       return;
     }
     var parsed=data.plan;
@@ -1501,6 +1504,285 @@ function showPlanner(){
   document.getElementById('plannerWrap').style.display='block';
 }
 
+// -- ACCOUNT PANEL --
+var accountPanelOpen = false;
+
+function openAccountPanel() {
+  document.getElementById("accountOverlay").style.display = "block";
+  document.getElementById("accountPanel").style.display = "block";
+  accountPanelOpen = true;
+  loadAccountPanel();
+}
+
+function closeAccountPanel() {
+  document.getElementById("accountOverlay").style.display = "none";
+  document.getElementById("accountPanel").style.display = "none";
+  accountPanelOpen = false;
+}
+
+var PLAN_INFO = {
+  taster:   { name: "Taster",   monthly: "£4.99/month",              annual: "£4.99/month" },
+  everyday: { name: "Everyday", monthly: "£9.99/month",              annual: "£8.25/month (£99/year)" },
+  family:   { name: "Family",   monthly: "£14.99/month",             annual: "£12.42/month (£149/year)" }
+};
+
+var PLAN_ORDER = ["taster", "everyday", "family"];
+
+function loadAccountPanel() {
+  var body = document.getElementById("accountPanelBody");
+  api("/api/payments/subscription", "GET").then(function(data) {
+    if (!data.success) { body.innerHTML = "<div class='nb'>Could not load account details.</div>"; return; }
+    renderAccountPanel(data);
+  }).catch(function() {
+    body.innerHTML = "<div class='nb'>Could not connect to server.</div>";
+  });
+}
+
+function renderAccountPanel(sub) {
+  var plan = sub.plan || "everyday";
+  var billing = sub.billing || "monthly";
+  var status = sub.status || "active";
+  var cancelAtEnd = sub.cancelAtPeriodEnd;
+  var renewalDate = sub.renewalDate ? new Date(sub.renewalDate).toLocaleDateString("en-GB", {day:"numeric",month:"long",year:"numeric"}) : null;
+  var info = PLAN_INFO[plan] || PLAN_INFO.everyday;
+  var priceLabel = info[billing] || info.monthly;
+
+  var body = document.getElementById("accountPanelBody");
+  body.innerHTML = "";
+
+  // Current plan block
+  var planBlock = document.createElement("div");
+  planBlock.style.cssText = "background:#E1F5EE;border:1px solid #5DCAA5;border-radius:10px;padding:16px;margin-bottom:20px";
+  planBlock.innerHTML = "<div style='font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#0F6E56;margin-bottom:6px'>Current plan</div><div style='font-size:20px;font-weight:700;color:#0F6E56'>" + info.name + "</div><div style='font-size:14px;color:#0F6E56;margin-top:2px'>" + priceLabel + "</div>";
+  if (cancelAtEnd && renewalDate) {
+    planBlock.innerHTML += "<div style='font-size:13px;color:#854F0B;margin-top:8px;background:#FAEEDA;padding:6px 10px;border-radius:6px'>Cancels on " + renewalDate + "</div>";
+    var keepBtn = document.createElement("button");
+    keepBtn.textContent = "Keep subscription";
+    keepBtn.style.cssText = "margin-top:10px;font-size:13px;color:#0F6E56;background:none;border:1px solid #5DCAA5;border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit";
+    keepBtn.onclick = reactivatePlan;
+    planBlock.appendChild(keepBtn);
+  } else if (renewalDate) {
+    planBlock.innerHTML += "<div style='font-size:13px;color:#0F6E56;opacity:0.8;margin-top:4px'>Renews " + renewalDate + "</div>";
+  }
+  if (status === "trialing") {
+    planBlock.innerHTML += "<div style='font-size:13px;color:#0F6E56;margin-top:4px'>Free trial active</div>";
+  }
+  body.appendChild(planBlock);
+
+  // Change plan label
+  var changeLabel = document.createElement("div");
+  changeLabel.style.cssText = "font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:10px";
+  changeLabel.textContent = "Change plan";
+  body.appendChild(changeLabel);
+
+  // Plan option cards
+  PLAN_ORDER.forEach(function(p) {
+    var pi = PLAN_INFO[p];
+    var isCurrent = p === plan;
+    var isUpgrade = PLAN_ORDER.indexOf(p) > PLAN_ORDER.indexOf(plan);
+    var card = document.createElement("div");
+    card.style.cssText = "border:2px solid " + (isCurrent ? "#5DCAA5" : "#e0ddd4") + ";border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between" + (isCurrent ? "" : ";cursor:pointer");
+    if (!isCurrent) {
+      card.onclick = (function(planId) { return function() { confirmChangePlan(planId, billing); }; })(p);
+    }
+    var left = document.createElement("div");
+    left.innerHTML = "<div style='font-size:15px;font-weight:600;color:#1a1a18'>" + pi.name + "</div><div style='font-size:13px;color:#888'>" + (pi[billing] || pi.monthly) + "</div>";
+    var right = document.createElement("span");
+    if (isCurrent) {
+      right.style.cssText = "font-size:12px;background:#E1F5EE;color:#0F6E56;padding:3px 9px;border-radius:999px;font-weight:600";
+      right.textContent = "Current";
+    } else {
+      right.style.cssText = "font-size:13px;color:#1D9E75;font-weight:600";
+      right.textContent = isUpgrade ? "Upgrade →" : "Downgrade →";
+    }
+    card.appendChild(left);
+    card.appendChild(right);
+    body.appendChild(card);
+  });
+
+  var downgradeNote = document.createElement("div");
+  downgradeNote.style.cssText = "font-size:12px;color:#888;margin-bottom:20px;margin-top:4px";
+  downgradeNote.textContent = "Downgrades take effect at the end of your current billing period.";
+  body.appendChild(downgradeNote);
+
+  // Cancel section
+  if (!cancelAtEnd) {
+    var cancelSection = document.createElement("div");
+    cancelSection.style.cssText = "border-top:1px solid #e0ddd4;padding-top:20px;margin-top:4px";
+    cancelSection.innerHTML = "<div style='font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:10px'>Cancel subscription</div><p style='font-size:13.5px;color:#666;margin-bottom:12px'>You can use Meal Plan Pro until the end of your billing period. No refunds for partial months.</p>";
+    var cancelBtn = document.createElement("button");
+    cancelBtn.style.cssText = "font-size:14px;color:#A32D2D;background:none;border:1px solid #E24B4A;border-radius:8px;padding:9px 16px;cursor:pointer;font-family:inherit;font-weight:500";
+    cancelBtn.textContent = "Cancel subscription";
+    cancelBtn.onclick = confirmCancel;
+    cancelSection.appendChild(cancelBtn);
+    body.appendChild(cancelSection);
+  }
+
+  // Account details
+  var acctSection = document.createElement("div");
+  acctSection.style.cssText = "border-top:1px solid #e0ddd4;padding-top:20px;margin-top:20px";
+  acctSection.innerHTML = "<div style='font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:10px'>Account details</div><div style='font-size:14px;color:#555;margin-bottom:16px'>" + (currentUser ? currentUser.email : "") + "</div>";
+  var pwSection = document.createElement("div");
+  pwSection.id = "changePwSection";
+  var pwLink = document.createElement("button");
+  pwLink.style.cssText = "font-size:13.5px;color:#1D9E75;background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;padding:0";
+  pwLink.textContent = "Change password";
+  pwLink.onclick = showChangePw;
+  pwSection.appendChild(pwLink);
+  acctSection.appendChild(pwSection);
+  body.appendChild(acctSection);
+}
+
+function confirmChangePlan(newPlan, billing) {
+  var pi = PLAN_INFO[newPlan];
+  var priceLabel = pi[billing] || pi.monthly;
+  if (!confirm("Switch to " + pi.name + " at " + priceLabel + "?")) return;
+  var body = document.getElementById("accountPanelBody");
+  body.innerHTML = "<div style='text-align:center;padding:2rem'><div class='spinner' style='width:20px;height:20px;border-width:2px;display:inline-block;border-color:#ccc;border-top-color:#1D9E75'></div><div style='font-size:14px;color:#888;margin-top:12px'>Updating your plan...</div></div>";
+  api("/api/payments/change-plan", "POST", { plan: newPlan, billing: billing }).then(function(data) {
+    if (data.success) { loadAccountPanel(); }
+    else { body.innerHTML = "<div class='nb' style='color:#A32D2D'>" + (data.error || "Could not update plan.") + "</div>"; }
+  }).catch(function() {
+    body.innerHTML = "<div class='nb' style='color:#A32D2D'>Connection error.</div>";
+  });
+}
+
+function confirmCancel() {
+  // Get current billing info to show accurate confirmation
+  api("/api/payments/subscription", "GET").then(function(sub) {
+    var isAnnual = sub.billing === "annual";
+    var msg = isAnnual
+      ? "Are you sure you want to cancel? You will keep access until the end of this month. Any remaining full months will be refunded automatically."
+      : "Are you sure you want to cancel? You will keep access until the end of your current billing period. No refund will be issued.";
+    if (!confirm(msg)) return;
+    var body = document.getElementById("accountPanelBody");
+    body.innerHTML = "<div style='text-align:center;padding:2rem'><div class='spinner' style='width:20px;height:20px;border-width:2px;display:inline-block;border-color:#ccc;border-top-color:#1D9E75'></div><div style='font-size:14px;color:#888;margin-top:12px'>Cancelling subscription...</div></div>";
+    api("/api/payments/cancel", "POST", {}).then(function(data) {
+      if (data.success) {
+        // Show confirmation with refund details if applicable
+        var msg2 = document.createElement("div");
+        msg2.style.cssText = "background:#E1F5EE;border:1px solid #5DCAA5;border-radius:10px;padding:20px;text-align:center";
+        var icon = document.createElement("div");
+        icon.style.cssText = "font-size:28px;margin-bottom:12px";
+        icon.textContent = "✓";
+        var title = document.createElement("div");
+        title.style.cssText = "font-size:16px;font-weight:700;color:#0F6E56;margin-bottom:8px";
+        title.textContent = "Subscription cancelled";
+        var detail = document.createElement("div");
+        detail.style.cssText = "font-size:14px;color:#555;line-height:1.5";
+        if (data.isAnnual && data.refundMonths > 0) {
+          detail.innerHTML = "A refund of <strong>£" + data.refundAmount + "</strong> for " + data.refundMonths + " unused month" + (data.refundMonths > 1 ? "s" : "") + " will appear in your account within 5-10 business days.<br><br>You have access until the end of this month.";
+        } else if (data.isAnnual) {
+          detail.textContent = "You have access until the end of this month. No refund is due as fewer than one full month remains.";
+        } else {
+          detail.textContent = "You have access until the end of your current billing period.";
+        }
+        msg2.appendChild(icon);
+        msg2.appendChild(title);
+        msg2.appendChild(detail);
+        body.innerHTML = "";
+        body.appendChild(msg2);
+      } else {
+        body.innerHTML = "<div class='nb' style='color:#A32D2D'>" + (data.error || "Could not cancel.") + "</div>";
+      }
+    }).catch(function() {
+      body.innerHTML = "<div class='nb' style='color:#A32D2D'>Connection error.</div>";
+    });
+  });
+}
+
+function reactivatePlan() {
+  var body = document.getElementById("accountPanelBody");
+  body.innerHTML = "<div style='text-align:center;padding:2rem'><div class='spinner' style='width:20px;height:20px;border-width:2px;display:inline-block;border-color:#ccc;border-top-color:#1D9E75'></div></div>";
+  api("/api/payments/reactivate", "POST", {}).then(function(data) {
+    if (data.success) { loadAccountPanel(); }
+    else { body.innerHTML = "<div class='nb' style='color:#A32D2D'>" + (data.error || "Could not reactivate.") + "</div>"; }
+  }).catch(function() {
+    body.innerHTML = "<div class='nb' style='color:#A32D2D'>Connection error.</div>";
+  });
+}
+
+function showChangePw() {
+  var sec = document.getElementById("changePwSection");
+  sec.innerHTML = "";
+  var pw1 = document.createElement("input");
+  pw1.type = "password"; pw1.id = "newPw1"; pw1.placeholder = "New password";
+  pw1.style.cssText = "width:100%;padding:9px 11px;border:1px solid #e0ddd4;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:8px;display:block";
+  var pw2 = document.createElement("input");
+  pw2.type = "password"; pw2.id = "newPw2"; pw2.placeholder = "Confirm new password";
+  pw2.style.cssText = "width:100%;padding:9px 11px;border:1px solid #e0ddd4;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:8px;display:block";
+  var row = document.createElement("div");
+  row.style.cssText = "display:flex;gap:8px";
+  var saveBtn = document.createElement("button");
+  saveBtn.textContent = "Update password"; saveBtn.onclick = submitChangePw;
+  saveBtn.style.cssText = "font-size:13.5px;background:#1D9E75;color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:inherit";
+  var cancelBtn = document.createElement("button");
+  cancelBtn.textContent = "Cancel"; cancelBtn.onclick = loadAccountPanel;
+  cancelBtn.style.cssText = "font-size:13.5px;background:none;border:1px solid #e0ddd4;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:inherit;color:#666";
+  var msg = document.createElement("div");
+  msg.id = "pwMsg"; msg.style.cssText = "font-size:13px;margin-top:8px";
+  row.appendChild(saveBtn); row.appendChild(cancelBtn);
+  sec.appendChild(pw1); sec.appendChild(pw2); sec.appendChild(row); sec.appendChild(msg);
+}
+
+function submitChangePw() {
+  var p1 = document.getElementById("newPw1").value;
+  var p2 = document.getElementById("newPw2").value;
+  var msg = document.getElementById("pwMsg");
+  if (p1.length < 8) { msg.style.color="#A32D2D"; msg.textContent="Password must be at least 8 characters."; return; }
+  if (p1 !== p2) { msg.style.color="#A32D2D"; msg.textContent="Passwords do not match."; return; }
+  msg.style.color="#888"; msg.textContent="Updating...";
+  api("/api/auth/change-password", "POST", { password: p1 }).then(function(data) {
+    if (data.success) { msg.style.color="#0F6E56"; msg.textContent="Password updated."; setTimeout(loadAccountPanel, 1500); }
+    else { msg.style.color="#A32D2D"; msg.textContent = data.error || "Could not update password."; }
+  }).catch(function() { msg.style.color="#A32D2D"; msg.textContent="Connection error."; });
+}
+
+// -- TIER LIMIT HANDLING --
+function handleGenError(data) {
+  var genTxt = document.getElementById("genTxt");
+  var genSub = document.getElementById("genSub");
+
+  if (data.code === "MONTHLY_LIMIT_REACHED") {
+    genTxt.textContent = "Monthly limit reached";
+    genSub.innerHTML = data.error + "<br><br>" +
+      '<button class="btn pri" onclick="openAccountPanel()" style="font-size:13px;padding:7px 14px;margin-top:4px">Upgrade plan</button>' +
+      '<span style="color:#888;font-size:12px;margin-left:10px">Resets ' + data.resetsOn + "</span>";
+    return;
+  }
+
+  if (data.code === "DAYS_LIMIT_EXCEEDED") {
+    genTxt.textContent = "Plan too long for your tier";
+    genSub.innerHTML = "Your " + data.currentTier + " plan supports up to " + data.limit + "-day plans.<br><br>" +
+      '<button class="btn pri" onclick="openAccountPanel()" style="font-size:13px;padding:7px 14px;margin-top:4px">Upgrade to ' + capitalise(data.upgradeTo) + "</button>";
+    return;
+  }
+
+  if (data.code === "FEATURE_NOT_AVAILABLE") {
+    var featureNames = { partner: "Adding a partner", sports: "Sports nutrition", children: "Children and family planning" };
+    var featureName = featureNames[data.feature] || "This feature";
+    genTxt.textContent = "Feature not available on your plan";
+    genSub.innerHTML = featureName + " requires the " + capitalise(data.upgradeTo) + " plan.<br><br>" +
+      '<button class="btn pri" onclick="openAccountPanel()" style="font-size:13px;padding:7px 14px;margin-top:4px">Upgrade to ' + capitalise(data.upgradeTo) + "</button>";
+    return;
+  }
+
+  if (data.code === "SUBSCRIPTION_INACTIVE") {
+    genTxt.textContent = "Subscription required";
+    genSub.innerHTML = "Your subscription is not active.<br><br>" +
+      '<a href="/register.html" class="btn pri" style="font-size:13px;padding:7px 14px;margin-top:4px;display:inline-flex">Choose a plan</a>';
+    return;
+  }
+
+  // Generic error
+  genTxt.textContent = "Something went wrong";
+  genSub.textContent = data.error || "Please try again.";
+}
+
+function capitalise(str) {
+  return str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+}
+
 // -- CONSUMER MODE --
 var regRole = 'practitioner';
 function setRegRole(role) {
@@ -1694,7 +1976,19 @@ if(authToken&&currentUser){
 }
 </script>
 <!-- SHOPPING LINK PANEL -->
-<div class="shop-panel-overlay" id="shopOverlay" onclick="closeShopPanel()"></div>
+<!-- ACCOUNT PANEL -->
+<div id="accountOverlay" onclick="closeAccountPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300"></div>
+<div id="accountPanel" style="display:none;position:fixed;top:0;right:0;width:380px;max-width:100vw;height:100vh;background:#fff;z-index:301;overflow-y:auto;box-shadow:-4px 0 32px rgba(0,0,0,0.12)">
+  <div style="padding:24px 24px 16px;border-bottom:1px solid #e0ddd4;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-size:18px;font-weight:700">Account</div>
+    <button onclick="closeAccountPanel()" style="font-size:22px;background:none;border:none;cursor:pointer;color:#888;line-height:1">&#215;</button>
+  </div>
+  <div style="padding:20px 24px" id="accountPanelBody">
+    <div style="text-align:center;padding:2rem"><div class="spinner" style="width:20px;height:20px;border-width:2px;display:inline-block;border-color:#ccc;border-top-color:#1D9E75"></div></div>
+  </div>
+</div>
+
+<div id="swapModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center"> id="shopOverlay" onclick="closeShopPanel()"></div>
 <div class="shop-panel" id="shopPanel">
   <div class="shop-panel-hd">
     <div class="shop-panel-title" id="shopPanelTitle">Shop items</div>
