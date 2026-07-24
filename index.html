@@ -319,7 +319,8 @@ textarea{resize:vertical;min-height:52px}
     <div class="sec-lbl">Preferences &amp; plan settings</div>
     <div class="frow c2"><div><label>Foods they dislike</label><input type="text" id="dislikes" placeholder="e.g. mushrooms, liver"/></div><div><label>Cooking time</label><select id="cooktime"><option value="">No preference</option><option>Under 20 mins</option><option>Up to 30 mins</option><option>Up to 1 hour</option><option>Meal prep friendly</option></select></div></div>
     <div class="frow c2"><div><label>Meals per day</label><select id="mealspd"><option value="2">2 meals</option><option value="3" selected>3 meals</option><option value="4">4 meals</option><option value="5">5 meals + snacks</option></select></div><div><label>Snacks (in addition)</label><select id="incSnacks"><option value="yes">Yes, 2/day</option><option value="one">Yes, 1/day</option><option value="no">No</option></select></div></div>
-    <div class="frow c2"><div><label>Batch cooking</label><select id="batchcook"><option value="yes">Yes</option><option value="no">No</option><option value="some">Some meals</option></select></div><div><label>Plan days</label><select id="days"><option>3</option><option>5</option><option selected>7</option><option>14</option></select></div></div>
+    <div class="frow c2"><div><label>Batch cooking</label><select id="batchcook" onchange="syncStartDay()"><option value="yes">Yes</option><option value="no">No</option><option value="some">Some meals</option></select></div><div><label>Plan days</label><select id="days"><option>3</option><option>5</option><option selected>7</option><option>14</option></select></div></div>
+    <div class="frow c2"><div><label>Plan starts on</label><select id="startDay" onchange="startDayTouched=true"><option selected>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select></div><div><div style="font-size:13px;color:#888;padding-top:28px">The day your shopping and meal plan begin.</div></div></div>
     <div class="frow c1"><label>Additional notes</label><textarea id="notes" placeholder="e.g. works shifts, has young children, training for a marathon..."></textarea></div>
   </div>
   <div class="brow"><button class="btn pri" onclick="goS(2)">Next: sports goal →</button></div>
@@ -652,12 +653,22 @@ function swTab(name,el){
   document.getElementById('tp-'+name).classList.add('on');
 }
 
+var startDayTouched=false;
+function syncStartDay(){
+  var sd=document.getElementById('startDay');var bc=document.getElementById('batchcook');
+  if(!sd||!bc||startDayTouched) return;
+  sd.value=(bc.value==='yes')?'Sunday':'Monday';
+}
 function buildDayPlanner(){
   var daysCount=parseInt(document.getElementById('days').value)||7;
   var dayNames=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  var startSel=document.getElementById('startDay');
+  var startOffset=startSel?dayNames.indexOf(startSel.value):0;
+  if(startOffset<0) startOffset=0;
   var numKids=kidCount;var h='';
   for(var i=0;i<daysCount;i++){
-    var dn=dayNames[i%7];var isWeekday=i%7<5;
+    var realIdx=(i+startOffset)%7;
+    var dn=dayNames[realIdx];var isWeekday=realIdx<5;
     h+='<div class="dp-card" data-d="'+dn+'"><div class="dp-day">'+dn+'</div>';
     if(hasSports){
       h+='<div class="dp-row"><span>Training</span><select class="train-sel"><option value="rest">Rest day</option><option value="easy">Easy session</option><option value="moderate">Moderate session</option><option value="hard">Hard session</option><option value="long">Long session</option><option value="race">Race day</option></select></div>';
@@ -1460,6 +1471,9 @@ function populateFormFromProfile(){
   if(c.batchcook) document.getElementById('batchcook').value=c.batchcook;
   if(c.incSnacks) document.getElementById('incSnacks').value=c.incSnacks;
   if(c.days) document.getElementById('days').value=c.days;
+  var sdEl=document.getElementById('startDay');
+  if(sdEl&&APP.daySchedule&&APP.daySchedule[0]&&APP.daySchedule[0].day){ sdEl.value=APP.daySchedule[0].day; startDayTouched=true; }
+  else { syncStartDay(); }
   if(c.mealspd) { var ms=document.getElementById('mealspd'); if(ms) ms.value=c.mealspd; }
   // Restore children
   if(APP.children&&APP.children.length){
@@ -1967,6 +1981,8 @@ function showHome(){
     loadSavedProfiles();
   }
 }
+
+syncStartDay();
 
 // ── STARTUP ────────────────────────────────────────────
 if(authToken&&currentUser){
