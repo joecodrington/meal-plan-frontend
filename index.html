@@ -1463,6 +1463,19 @@ async function loadProfile(id){
 function populateFormFromProfile(){
   var c=APP.client;
   if(!c) return;
+  function setVal(id,v){ if(v===undefined||v===null||v==='') return; var el=document.getElementById(id); if(el) el.value=v; }
+  function setChips(containerId,arr){
+    var want={}; (arr||[]).forEach(function(x){ want[String(x).trim()]=true; });
+    document.querySelectorAll('#'+containerId+' .chip').forEach(function(chip){
+      chip.classList.toggle('on', !!want[chip.textContent.trim()]);
+    });
+  }
+  function selectFromCards(selector,attr,value,fn){
+    if(!value) return;
+    var match=[...document.querySelectorAll(selector)].filter(function(el){return el.dataset[attr]===value;})[0];
+    if(match) fn(match);
+  }
+
   var fields=['fname','lname','age','height','weight','tweight','allergies','dislikes','notes'];
   fields.forEach(function(f){var el=document.getElementById(f);if(el&&c[f]) el.value=c[f];});
   if(c.sex) document.getElementById('sex').value=c.sex;
@@ -1475,12 +1488,21 @@ function populateFormFromProfile(){
   if(sdEl&&APP.daySchedule&&APP.daySchedule[0]&&APP.daySchedule[0].day){ sdEl.value=APP.daySchedule[0].day; startDayTouched=true; }
   else { syncStartDay(); }
   if(c.mealspd) { var ms=document.getElementById('mealspd'); if(ms) ms.value=c.mealspd; }
+
+  // Goals, diet & work-lunch (were not being restored)
+  setChips('goals', c.goals);
+  setChips('diet', c.diet);
+  setVal('workLunch', c.workLunch);
+  setVal('lunchBudget', c.lunchBudget);
+
   // Restore children
   if(APP.children&&APP.children.length){
     kidCount=APP.children.length;
     document.getElementById('kidCount').textContent=kidCount;
     renderChildCards();
   }
+
+  // Second adult
   if(c.hasAdult2){
     showAdult2=true;
     document.getElementById('adult2fields').style.display='block';
@@ -1492,7 +1514,36 @@ function populateFormFromProfile(){
     if(c.adult2height) document.getElementById('height2').value=c.adult2height;
     if(c.adult2activity) document.getElementById('activity2').value=c.adult2activity;
     if(c.adult2diet) document.getElementById('diet2').value=c.adult2diet;
+    setVal('mealspd2', c.adult2mealspd);                 // partner's meals per day — was previously dropped
+    // Partner's sports profile
+    if(typeof setA2Sports==='function') setA2Sports(!!c.adult2hasSports);
+    if(c.adult2hasSports){
+      setVal('sport2', c.adult2sport);
+      setVal('trainDays2', c.adult2trainDays);
+      setVal('intensity2', c.adult2intensity);
+    }
   }
+
+  // Primary adult sports profile (was not being restored)
+  if(typeof toggleSports==='function') toggleSports(!!c.hasSports);
+  if(c.hasSports){
+    selectFromCards('.sport-card','s',c.sport,selSport);
+    setVal('eventName', c.eventName);
+    setVal('weeksToEvent', c.weeksToEvent);
+    setVal('trainDays', c.trainDays);
+    setVal('sessionDuration', c.sessionDuration);
+    setVal('intensity', c.intensity);
+    setVal('trainTime', c.trainTime);
+    setVal('longDay', c.longDay);
+    setVal('carbLoad', c.carbLoad);
+    setVal('midFuel', c.midFuel);
+    setVal('giSensitivity', c.giSensitivity);
+  }
+
+  // Retailer & tier — reflect the saved shop in the UI selection
+  selectFromCards('.r-card','r',APP.retailer,selR);
+  selectFromCards('.tier-opt','t',APP.tier,selT);
+
   if(c.favouriteMeals&&c.favouriteMeals.length){
     APP.favourites={};
     c.favouriteMeals.forEach(function(m){APP.favourites[m]=true;});
