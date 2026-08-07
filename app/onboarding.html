@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Plan Pro — Onboarding (rebuild)</title>
+<style>
+  :root{
+    --green:#1a8f5a;--green-dark:#15784a;--green-accent:#3da972;--green-soft:#e5f2ea;
+    --cream:#f4ede4;--cream-deep:#ebe1d2;--white:#fff;
+    --ink:#1f1f1f;--ink-soft:#3d3d3d;--grey:#7d7d7d;--grey-light:#b8b3a9;--rule:#e2dccf;
+    --shadow-sm:0 6px 18px -10px rgba(31,31,31,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;background:var(--cream);color:var(--ink);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  header{border-bottom:1px solid var(--rule);padding:16px 28px;display:flex;justify-content:space-between;align-items:center;background:rgba(244,237,228,.94);position:sticky;top:0;z-index:40}
+  .logo{font-size:20px;font-weight:700}.logo span{color:var(--green-accent)}
+  .badge{font-size:11px;font-weight:600;color:var(--green-dark);background:var(--green-soft);border:1px solid #cfe6da;padding:3px 9px;border-radius:999px;margin-left:10px}
+  .stepc{font-size:13px;color:var(--grey);font-weight:600}
+  .pwrap{max-width:640px;margin:0 auto;padding:24px 24px 0}
+  .ptrack{height:6px;background:var(--cream-deep);border-radius:999px;overflow:hidden}
+  .pfill{height:100%;background:linear-gradient(90deg,var(--green),var(--green-accent));width:12%;border-radius:999px;transition:width .35s}
+  main{max-width:640px;margin:0 auto;padding:24px 24px 130px}
+  .step{display:none;animation:f .35s ease}.step.on{display:block}
+  @keyframes f{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .eyebrow{font-size:12.5px;font-weight:600;color:var(--green);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px}
+  h1{font-size:clamp(24px,4.5vw,32px);font-weight:700;letter-spacing:-.02em;line-height:1.12;margin-bottom:8px}
+  .lede{font-size:15.5px;color:var(--ink-soft);margin-bottom:24px}
+  .card{background:var(--white);border:1px solid var(--rule);border-radius:16px;box-shadow:var(--shadow-sm);padding:22px;margin-bottom:16px}
+  .field{margin-bottom:16px}.field:last-child{margin-bottom:0}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+  label .s2{font-weight:400;color:var(--grey)}
+  input,select{width:100%;font-family:inherit;font-size:15px;color:var(--ink);padding:12px 13px;border:1px solid var(--rule);border-radius:10px;background:var(--white)}
+  input:focus,select:focus{outline:none;border-color:var(--green-accent);box-shadow:0 0 0 3px var(--green-soft)}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}.frow.c3{grid-template-columns:1fr 1fr 1fr}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1px solid var(--rule);background:var(--white);color:var(--ink-soft);padding:9px 15px;border-radius:999px;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+  .chip.on{background:var(--green);border-color:var(--green);color:#fff}.chip.dis{opacity:.4;pointer-events:none}
+  .person{font-size:13px;font-weight:700;margin:2px 0 12px}
+  .divider{height:1px;background:var(--rule);margin:18px 0}
+  .goal-eff{margin-top:10px;font-size:12px;color:var(--green-dark);background:var(--green-soft);border:1px solid #cfe6da;border-radius:8px;padding:9px 12px;line-height:1.45}
+  .rate-rec{font-size:11px;color:var(--green-dark);margin-top:7px}.rate-rec.muted{color:var(--grey)}
+  .toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0}
+  .toggle .t{font-weight:600;font-size:15px}.toggle .s{font-size:13px;color:var(--grey)}
+  .switch{position:relative;width:46px;height:26px;flex-shrink:0;cursor:pointer}
+  .switch input{display:none}.switch .tr{position:absolute;inset:0;background:var(--cream-deep);border:1px solid var(--rule);border-radius:999px;transition:.2s}
+  .switch .kn{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}
+  .switch input:checked+.tr{background:var(--green);border-color:var(--green)}.switch input:checked+.tr+.kn{left:23px}
+  .kidrow{display:flex;gap:12px;align-items:center;margin-bottom:10px}.kidrow input{flex:1}
+  .rm{background:none;border:none;color:var(--grey);cursor:pointer;font-size:18px;font-family:inherit}.rm:hover{color:#9c3e3e}
+  .add{background:var(--white);border:1px dashed var(--grey-light);color:var(--green-dark);padding:10px 16px;border-radius:10px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+  .add:hover{border-color:var(--green);background:var(--green-soft)}
+  .finish{text-align:center;padding:8px 0}
+  .check{width:60px;height:60px;border-radius:50%;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px}
+  .summary{background:var(--white);border:1px solid var(--rule);border-radius:14px;padding:6px 18px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+  .srow{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--rule);font-size:14px}.srow:last-child{border-bottom:none}
+  .srow .k{color:var(--grey)}.srow .v{color:var(--ink);font-weight:600;text-align:right}
+  .navbar{position:fixed;bottom:0;left:0;right:0;background:rgba(244,237,228,.96);backdrop-filter:blur(8px);border-top:1px solid var(--rule);padding:14px 24px}
+  .navin{max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .btn{border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:10px;transition:.18s;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:var(--green);color:#fff;padding:13px 24px;font-size:15px}.btn-primary:hover{background:var(--green-dark)}
+  .btn-ghost{background:transparent;color:var(--ink-soft);padding:13px 16px;font-size:14.5px}
+  .btn-text{background:none;border:none;color:var(--grey);font-family:inherit;font-size:13.5px;cursor:pointer;text-decoration:underline}
+  .dots{display:flex;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:var(--cream-deep)}.dot.done{background:var(--green-accent)}.dot.cur{background:var(--green);transform:scale(1.35)}
+  .note{display:flex;gap:10px;align-items:flex-start;border-radius:10px;padding:10px 13px;font-size:12.5px;line-height:1.45;margin-top:14px}
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;z-index:60;max-width:90%;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  details.dev{margin-top:18px;border:1px dashed var(--grey-light);border-radius:10px;padding:12px 14px;background:#fbf8f3}
+  details.dev summary{font-size:13px;font-weight:600;color:var(--grey);cursor:pointer}
+  details.dev pre{margin-top:10px;font-size:11px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow:auto;color:var(--ink-soft)}
+  @media(max-width:520px){.frow,.frow.c3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div><span class="logo">Meal Plan <span>Pro</span></span><span class="badge">Onboarding · rebuild (E-P2.4)</span></div>
+  <div class="stepc"><span id="sNow">1</span> of <span id="sTot">8</span></div>
+</header>
+<div class="pwrap"><div class="ptrack"><div class="pfill" id="pfill"></div></div></div>
+<main id="steps"></main>
+
+<div class="navbar"><div class="navin">
+  <button class="btn btn-ghost" id="back" style="visibility:hidden">← Back</button>
+  <div class="dots" id="dots"></div>
+  <div style="display:flex;align-items:center;gap:8px"><button class="btn-text" id="skip" style="display:none">Skip</button><button class="btn btn-primary" id="next">Next →</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script src="profileModel.js"></script>
+<script>
+const M=window.ProfileModel;
+const BACKEND='https://meal-plan-backend-su6p.onrender.com';
+let authToken=(typeof localStorage!=='undefined'&&localStorage.getItem('authToken'))||null;
+function api(path,method,body){const o={method:method||'GET',headers:{'Content-Type':'application/json'}};if(authToken)o.headers.Authorization='Bearer '+authToken;if(body)o.body=JSON.stringify(body);return fetch(BACKEND+path,o).then(r=>r.json());}
+
+const state={ account:{name:'',email:'',password:''}, profile:M.defaultProfile() };
+state.profile.adults[0]=M.defaultAdult('');
+let step=1; const TOTAL=8;   // 8 input steps + a done screen (step 9)
+
+// helpers
+const el=(t,a,k)=>{const e=document.createElement(t);for(const x in(a||{})){if(x==='class')e.className=a[x];else if(x.slice(0,2)==='on')e.addEventListener(x.slice(2),a[x]);else if(x==='html')e.innerHTML=a[x];else e.setAttribute(x,a[x]);}(k||[]).forEach(c=>{if(c==null)return;e.appendChild((typeof c==='string'||typeof c==='number')?document.createTextNode(String(c)):c);});return e;};
+const txt=(v,on,ty)=>{const i=el('input',{type:ty||'text',oninput:e=>on(e.target.value)});i.value=v==null?'':v;return i;};
+const sel=(v,opts,on)=>{const s=el('select',{onchange:e=>on(e.target.value)});opts.forEach(o=>{const lab=Array.isArray(o)?o[1]:o,val=Array.isArray(o)?o[0]:o;const op=el('option',{},[lab]);op.value=val;if(String(val)===String(v))op.selected=true;s.appendChild(op);});return s;};
+const field=(l,c)=>el('div',{class:'field'},[el('label',{html:l}),c]);
+const chips=(opts,selv,multi,on)=>{const r=el('div',{class:'chip-row'});opts.forEach(o=>{const lab=Array.isArray(o)?o[1]:o,val=Array.isArray(o)?o[0]:o;const active=multi?selv.indexOf(val)>=0:selv===val;r.appendChild(el('div',{class:'chip'+(active?' on':''),onclick:()=>on(val)},[lab]));});return r;};
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+const GL={loseweight:{r:true,k:{gentle:-300,steady:-500,aggressive:-750},p:'~1.6 g/kg'},losefat:{r:true,k:{gentle:-250,steady:-350,aggressive:-550},p:'1.8–2.2 g/kg'},recomp:{r:false,p:'2.0–2.2 g/kg'},maintain:{r:false,p:'1.4–1.6 g/kg'},buildmuscle:{r:true,k:{gentle:200,steady:300,aggressive:450},p:'1.6–2.2 g/kg'},gainweight:{r:true,k:{gentle:300,steady:500,aggressive:700},p:'~1.6 g/kg'}};
+function goalText(g,rt){const x=GL[g];if(!x)return'';if(!x.r)return`Calories at/around maintenance · protein ${x.p}. Rate doesn't apply.`;const d=x.k[rt];return`About ${d<0?'−':'+'}${Math.abs(d)} kcal/day vs maintenance · protein ${x.p}.`;}
+
+function adultGoal(a){
+  const wrap=el('div',{});
+  const eff=el('div',{class:'goal-eff'}), rateRec=el('div',{class:'rate-rec'}), rateWrap=el('div',{class:'chip-row'});
+  function paint(){eff.textContent=goalText(a.goal,a.rate);const rated=GL[a.goal].r;[...rateWrap.children].forEach(c=>c.classList.toggle('dis',!rated));rateRec.className='rate-rec'+(rated?'':' muted');rateRec.textContent=rated?'✓ We recommend Steady for lasting results.':"Rate doesn't apply here.";}
+  const gc=chips(M.GOALS.map(g=>[g,M.GOAL_LABELS[g]]),a.goal,false,v=>{a.goal=v;[...gc.children].forEach((c,i)=>c.classList.toggle('on',M.GOALS[i]===v));paint();});
+  M.RATES.forEach(r=>rateWrap.appendChild(el('div',{class:'chip'+(a.rate===r?' on':''),onclick:(ev)=>{a.rate=r;[...rateWrap.children].forEach(c=>c.classList.remove('on'));ev.target.classList.add('on');paint();}},[r[0].toUpperCase()+r.slice(1)])));
+  wrap.appendChild(field('Primary goal',gc));wrap.appendChild(eff);
+  wrap.appendChild(el('div',{class:'frow'},[
+    (()=>{const d=el('div',{});d.appendChild(el('label',{html:'Rate <span class="s2">— loss/gain</span>'}));d.appendChild(rateWrap);d.appendChild(rateRec);return d;})(),
+    field('Dietary emphasis <span class="s2">— shapes food, not calories</span>',chips(M.EMPHASIS,a.emphasis,true,v=>{const i=a.emphasis.indexOf(v);if(i>=0)a.emphasis.splice(i,1);else a.emphasis.push(v);renderStep();})),
+  ]));
+  paint();return wrap;
+}
+
+// ── step definitions ──
+function stepBody(n){
+  const p=state.profile, a1=p.adults[0], a2=p.adults[1];
+  const box=el('div',{});
+  const eyebrow=(t)=>box.appendChild(el('div',{class:'eyebrow'},[t]));
+  const head=(t,l)=>{box.appendChild(el('h1',{},[t]));if(l)box.appendChild(el('p',{class:'lede'},[l]));};
+
+  if(n===1){ eyebrow('Welcome'); head("Let's set up your household.","A couple of minutes now, saved forever. After this, planning a week takes seconds.");
+    const c=el('div',{class:'card'},[
+      field('Your name',txt(state.account.name,v=>state.account.name=v)),
+      field('Email',txt(state.account.email,v=>state.account.email=v,'email')),
+      field('Create a password',txt(state.account.password,v=>state.account.password=v,'password')),
+    ]); box.appendChild(c);
+    box.appendChild(el('p',{style:'font-size:12.5px;color:var(--grey)'},['7 days free · cancel anytime before day 8.']));
+    box.appendChild(el('p',{style:'font-size:13.5px;color:var(--ink-soft);margin-top:12px',html:'Already have an account? <a href="login.html" style="color:var(--green-dark);font-weight:600;text-decoration:none">Sign in &rarr;</a>'}));
+  }
+  else if(n===2){ eyebrow("Who's at the table"); head('Who are we planning for?','We plan for the whole household from one kitchen and one list.');
+    const c=el('div',{class:'card'});
+    c.appendChild(el('div',{class:'toggle'},[el('div',{},[el('div',{class:'t'},['You']),el('div',{class:'s'},['The main account holder'])]),el('div',{style:'font-size:13px;color:var(--green-dark);font-weight:600'},['Included'])]));
+    c.appendChild(el('div',{class:'divider'}));
+    const sw=el('label',{class:'switch'});const inp=el('input',{type:'checkbox'});if(a2)inp.checked=true;inp.addEventListener('change',e=>{if(e.target.checked){if(!state.profile.adults[1])state.profile.adults.push(M.defaultAdult('Partner'));}else{state.profile.adults.splice(1,1);}renderStep();});
+    sw.appendChild(inp);sw.appendChild(el('span',{class:'tr'}));sw.appendChild(el('span',{class:'kn'}));
+    c.appendChild(el('div',{class:'toggle'},[el('div',{},[el('div',{class:'t'},['Add a partner']),el('div',{class:'s'},['A second adult with their own goals'])]),sw]));
+    box.appendChild(c);
+    const kc=el('div',{class:'card'},[el('label',{html:'Children <span class="s2">— we scale portions by age</span>'})]);
+    const list=el('div',{});
+    p.children.forEach((ch,i)=>{const row=el('div',{class:'kidrow'},[txt(ch.age,v=>ch.age=v,'number'),el('button',{class:'rm',onclick:()=>{p.children.splice(i,1);renderStep();}},['✕'])]);row.querySelector('input').setAttribute('placeholder','Age');list.appendChild(row);});
+    kc.appendChild(list);kc.appendChild(el('button',{class:'add',onclick:()=>{p.children.push({age:''});renderStep();}},['+ Add a child']));box.appendChild(kc);
+  }
+  else if(n===3){ eyebrow('The basics'); head('A little about each of you.','We use these to calculate a daily calorie target (Mifflin–St Jeor).');
+    if(a1 && !a1.name && state.account.name) a1.name=state.account.name;   // carry the account name across
+    [a1,a2].filter(Boolean).forEach((a,i)=>{
+      const c=el('div',{class:'card'},[el('div',{class:'person'},[i===0?'You':'Your partner'])]);
+      c.appendChild(el('div',{class:'frow c3'},[field('Name',txt(a.name,v=>a.name=v)),field('Age',txt(a.age,v=>a.age=v,'number')),field('Sex',sel(a.sex,['Male','Female','Prefer not to say'],v=>a.sex=v))]));
+      c.appendChild(el('div',{class:'frow c3'},[field('Activity',sel(a.activity,['Sedentary','Lightly active','Moderately active','Very active','Extra active'],v=>a.activity=v)),field('Height (cm)',txt(a.height,v=>a.height=v,'number')),field('Weight (kg)',txt(a.weight,v=>a.weight=v,'number'))]));
+      box.appendChild(c);
+    });
+  }
+  else if(n===4){ eyebrow('Goals'); head("What's each of you aiming for?",'Tap a goal to see how it changes your calories and macros.');
+    [a1,a2].filter(Boolean).forEach((a,i)=>{const c=el('div',{class:'card'},[el('div',{class:'person'},[i===0?'You':(a.name||'Your partner')])]);c.appendChild(adultGoal(a));box.appendChild(c);});
+  }
+  else if(n===5){ eyebrow('Food you avoid'); head('Anything to keep off the plate?','Set per person — allergies are never shared by mistake.');
+    [a1,a2].filter(Boolean).forEach((a,i)=>{const c=el('div',{class:'card'},[el('div',{class:'person'},[i===0?'You':(a.name||'Partner')]),el('div',{class:'frow'},[field('Allergies',txt(a.allergies,v=>a.allergies=v)),field('Dislikes',txt(a.dislikes,v=>a.dislikes=v))])]);box.appendChild(c);});
+    const kc=el('div',{class:'card'},[el('div',{class:'person'},['Children']),el('div',{class:'frow'},[field('Allergies',txt(p.kids.allergies,v=>p.kids.allergies=v)),field('Dislikes',txt(p.kids.dislikes,v=>p.kids.dislikes=v))])]);box.appendChild(kc);
+  }
+  else if(n===6){ eyebrow('Weekday routine'); head('How do weekdays run?','Set once and we apply it every week — you only tell us the weekend later.');
+    box.appendChild(el('div',{class:'note',style:'background:var(--green-soft);border:1px solid #cfe6da;color:var(--green-dark)'},[el('span',{},['ℹ️']),el('span',{},['“Quick” and “packed” lunches are built for you — simple, ≤30 minutes.'])]));
+    [a1,a2].filter(Boolean).forEach((a,i)=>{const c=el('div',{class:'card'},[el('div',{class:'person'},[i===0?'You':(a.name||'Partner')]),el('div',{class:'frow c3'},[
+      field('Breakfast',sel(a.eating.breakfast,[['quick','Quick & routine'],['plan','Plan it'],['skip','Skip']],v=>a.eating.breakfast=v)),
+      field('Lunch',sel(a.eating.lunch,[['leftovers','Leftovers / batch'],['quick','Quick (≤30 min)'],['out','Out / canteen']],v=>a.eating.lunch=v)),
+      field('Snacks / day',sel(a.eating.snacks,[0,1,2],v=>a.eating.snacks=+v)),
+    ])]);box.appendChild(c);});
+    const kc=el('div',{class:'card'},[el('div',{class:'person'},['Children']),el('div',{class:'frow c3'},[
+      field('Breakfast',sel(p.kids.eating.breakfast,[['quick','Quick & routine'],['plan','Plan it']],v=>p.kids.eating.breakfast=v)),
+      field('Weekday lunch',sel(p.kids.eating.weekdayLunch,[['packed','Packed lunch'],['school','School dinners']],v=>p.kids.eating.weekdayLunch=v)),
+      field('Snacks / day',sel(p.kids.eating.snacks,[0,1,2],v=>p.kids.eating.snacks=+v)),
+    ])]);box.appendChild(kc);
+  }
+  else if(n===7){ eyebrow('Training · optional'); head('Anyone training for something?','We fuel it — higher carbs on training days, race-week carb loading. Not training? Skip.');
+    [a1,a2].filter(Boolean).forEach((a,i)=>{const c=el('div',{class:'card'},[el('div',{class:'person'},[i===0?'You':(a.name||'Partner')]),el('div',{class:'frow c3'},[
+      field('Training?',sel(a.training.on?'yes':'no',[['no','No (general health)'],['yes','Yes']],v=>{a.training.on=(v==='yes');renderStep();})),
+      field('Sport',sel(a.training.sport,[''].concat(M.SPORTS),v=>a.training.sport=v)),
+      field('Sessions / week',txt(a.training.sessionsPerWeek,v=>a.training.sessionsPerWeek=v,'number')),
+    ])]);box.appendChild(c);});
+  }
+  else if(n===8){ eyebrow('Your shop'); head('Where do you shop, and how?','We aisle-order your list and price at this range. Change it any time.');
+    const c=el('div',{class:'card'},[el('div',{class:'frow'},[
+      field('Preferred supermarket',sel(p.shop.retailer,M.RETAILERS,v=>p.shop.retailer=v)),
+      field('Product range',chips(M.RANGES.map(r=>[r,M.RANGE_LABELS[r]]),p.shop.range,false,v=>{p.shop.range=v;renderStep();})),
+    ])]);box.appendChild(c);
+  }
+  else if(n===9){ // done
+    box.appendChild(el('div',{class:'finish'},[el('div',{class:'check'},['✓']),el('h1',{},["You're all set, "+(a1.name||'there')+'.']),el('p',{class:'lede',style:'margin:0 auto 20px'},['Your household is saved. Planning a week now takes one tap.'])]));
+    const sum=el('div',{class:'summary'});
+    const row=(k,v)=>sum.appendChild(el('div',{class:'srow'},[el('span',{class:'k'},[k]),el('span',{class:'v'},[v])]));
+    row('Household',(a1.name||'You')+(a2?' & '+(a2.name||'Partner'):'')+(p.children.length?' · '+p.children.length+' kid'+(p.children.length>1?'s':''):''));
+    row('Your goal',M.GOAL_LABELS[a1.goal]+(GL[a1.goal].r?' · '+a1.rate:''));
+    if(a2)row((a2.name||'Partner')+"'s goal",M.GOAL_LABELS[a2.goal]);
+    row('Shop',p.shop.retailer+' · '+M.RANGE_LABELS[p.shop.range]);
+    box.appendChild(sum);
+    const dev=el('details',{class:'dev'},[el('summary',{},['Developer view — client_data this writes to /api/clients']),el('pre',{id:'devJson'},['Press “Create my first plan”…'])]);box.appendChild(dev);
+  }
+  return box;
+}
+
+function renderStep(){
+  document.getElementById('steps').innerHTML='';
+  const s=el('div',{class:'step on'});s.appendChild(stepBody(step));document.getElementById('steps').appendChild(s);
+  document.getElementById('pfill').style.width=(step/TOTAL*100)+'%';
+  document.getElementById('sNow').textContent=Math.min(step,TOTAL);
+  document.getElementById('back').style.visibility=step===1?'hidden':'visible';
+  document.querySelectorAll('.dot').forEach(d=>{const i=+d.dataset.i;d.classList.toggle('done',i<step);d.classList.toggle('cur',i===step);});
+  document.getElementById('skip').style.display=(step===7)?'inline':'none';
+  const nx=document.getElementById('next');nx.textContent=step===TOTAL?'Create my first plan →':(step===TOTAL+1?'Go to my week →':'Next →');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function createPlan(){
+  const body=M.toClientData(state.profile);
+  window.__lastBody=body;                       // exposed for tests
+  if(authToken || state.account.email){
+    toast('Creating your account…');
+    try{
+      // 1. register (skip if a token already exists)
+      if(!authToken){
+        const reg=await api('/api/auth/register','POST',{name:state.account.name,email:state.account.email,password:state.account.password,role:'consumer'});
+        if(reg&&reg.token){ authToken=reg.token; try{localStorage.setItem('authToken',authToken);}catch(e){} }
+        else { toast('Sign-up failed: '+((reg&&reg.error)||'unknown')); return; }
+      }
+      // 2. save the profile (same client_data Settings reads/writes)
+      const res=await api('/api/clients','POST',body);
+      if(!(res&&res.success)){ toast('Profile save failed: '+((res&&res.error)||'unknown')); return; }
+      toast('All set ✓ — profile saved.');
+    }catch(e){ toast('Network error — '+(e.message||'')); return; }
+  } else {
+    toast('Demo — assembled client_data shown in the developer view.');
+  }
+  step=TOTAL+1; renderStep();                    // → done / summary screen
+  const dj=document.getElementById('devJson'); if(dj) dj.textContent=JSON.stringify(body,null,2);
+}
+
+// nav
+document.getElementById('next').addEventListener('click',()=>{
+  if(step<TOTAL){ step++; renderStep(); return; }          // input steps
+  if(step===TOTAL){ createPlan(); return; }                // final input step → register + save + done
+  location.href='thisweek.html';                           // done screen → hand off to This Week
+});
+document.getElementById('back').addEventListener('click',()=>{if(step>1){step--;renderStep();}});
+document.getElementById('skip').addEventListener('click',()=>{step++;renderStep();});
+
+// dots (input steps only)
+const dw=document.getElementById('dots');for(let i=1;i<=TOTAL;i++){const d=el('div',{class:'dot'});d.dataset.i=i;dw.appendChild(d);}
+document.getElementById('sTot').textContent=TOTAL;
+renderStep();
+</script>
+</body>
+</html>

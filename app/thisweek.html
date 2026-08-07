@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Plan Pro — This Week (rebuild)</title>
+<style>
+  :root{
+    --green:#1a8f5a;--green-dark:#15784a;--green-accent:#3da972;--green-soft:#e5f2ea;
+    --cream:#f4ede4;--cream-deep:#ebe1d2;--white:#fff;
+    --ink:#1f1f1f;--ink-soft:#3d3d3d;--grey:#7d7d7d;--grey-light:#b8b3a9;--rule:#e2dccf;
+    --shadow-sm:0 6px 18px -10px rgba(31,31,31,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;background:var(--cream);color:var(--ink);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  header{border-bottom:1px solid var(--rule);padding:16px 28px;display:flex;justify-content:space-between;align-items:center;background:rgba(244,237,228,.94);position:sticky;top:0;z-index:40}
+  .logo{font-size:20px;font-weight:700}.logo span{color:var(--green-accent)}
+  .badge{font-size:11px;font-weight:600;color:var(--green-dark);background:var(--green-soft);border:1px solid #cfe6da;padding:3px 9px;border-radius:999px;margin-left:10px}
+  main{max-width:760px;margin:0 auto;padding:28px 24px 120px}
+  .eyebrow{font-size:12.5px;font-weight:600;color:var(--green);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+  h1{font-size:32px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+  .sub{font-size:15px;color:var(--ink-soft);margin-bottom:22px}
+  .note{display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:14px 16px;font-size:13.5px;margin-bottom:18px}
+  .card{background:var(--white);border:1px solid var(--rule);border-radius:16px;box-shadow:var(--shadow-sm);margin-bottom:16px}
+  .strip{display:flex;align-items:center;gap:16px;padding:18px 20px}
+  .strip .pget{width:48px;height:48px;border-radius:13px;flex-shrink:0;background:linear-gradient(135deg,var(--green),var(--green-accent));color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
+  .strip .facts{flex:1;min-width:0}
+  .strip .who{font-weight:700;font-size:15.5px;margin-bottom:3px}
+  .strip .detail{font-size:13px;color:var(--grey);display:flex;flex-wrap:wrap;gap:4px 14px}
+  .strip .detail b{color:var(--ink-soft);font-weight:600}
+  .editlink{font-size:13px;font-weight:600;color:var(--green-dark);text-decoration:none;white-space:nowrap}
+  .regen{display:flex;align-items:center;gap:18px;padding:20px 22px;background:linear-gradient(120deg,#eaf5ef,#f4ede4 70%);border-color:#cfe6da}
+  .regen .copy{flex:1}.regen .copy h3{font-size:17px;font-weight:700;margin-bottom:3px}.regen .copy p{font-size:13.5px;color:var(--ink-soft)}
+  .pattern{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+  .pat{background:var(--white);border:1px solid var(--rule);border-radius:10px;padding:7px 11px;font-size:12px;color:var(--ink-soft)}.pat b{color:var(--ink)}
+  .sectlabel{font-size:13px;font-weight:600;color:var(--ink-soft);margin:22px 2px 10px}.sectlabel span{font-weight:400;color:var(--grey)}
+  .cardpad{padding:20px 22px}
+  .dinner-row{display:flex;align-items:center;gap:12px;margin-bottom:9px}.dinner-row .d{width:42px;font-size:13px;font-weight:700;color:var(--ink-soft)}
+  select{width:100%;font-family:inherit;font-size:14px;color:var(--ink);padding:10px 12px;border:1px solid var(--rule);border-radius:10px;background:var(--white)}
+  select:focus,textarea:focus{outline:none;border-color:var(--green-accent);box-shadow:0 0 0 3px var(--green-soft)}
+  .wk{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .wkcard{background:var(--cream);border:1px solid var(--rule);border-radius:12px;padding:14px 15px}
+  .wkcard .wd{font-size:12.5px;font-weight:700;color:var(--grey);margin-bottom:8px}
+  .wkslot{display:flex;align-items:center;gap:10px;margin-top:8px}.wkslot>span{width:74px;font-size:12px;font-weight:600;color:var(--ink-soft)}
+  textarea{width:100%;font-family:inherit;font-size:14px;padding:11px 13px;border:1px solid var(--rule);border-radius:10px;resize:vertical}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1px solid var(--rule);background:var(--white);color:var(--ink-soft);padding:9px 15px;border-radius:999px;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+  .chip.on{background:var(--green);border-color:var(--green);color:#fff}
+  .btn{border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:10px;padding:13px 22px;font-size:15px;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:var(--green-dark)}
+  .btn-ghost{background:var(--white);color:var(--ink);border:1px solid var(--rule)}
+  .actions{display:flex;gap:12px;align-items:center;margin-top:8px}
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;opacity:0;transition:all .3s;z-index:60;max-width:90%;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  details.dev{margin-top:22px;border:1px dashed var(--grey-light);border-radius:10px;padding:12px 14px;background:#fbf8f3}
+  details.dev summary{font-size:13px;font-weight:600;color:var(--grey);cursor:pointer}
+  details.dev pre{margin-top:10px;font-size:11px;line-height:1.5;color:var(--ink-soft);white-space:pre-wrap;word-break:break-word;max-height:360px;overflow:auto}
+  nav.appnav{display:flex;align-items:center;gap:4px}
+  nav.appnav a{font-size:13.5px;font-weight:600;color:var(--ink-soft);text-decoration:none;padding:7px 12px;border-radius:8px}
+  nav.appnav a:hover{background:var(--green-soft);color:var(--green-dark)}
+  nav.appnav a.on{color:var(--green-dark);background:var(--green-soft)}
+  nav.appnav button{background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--grey);cursor:pointer;padding:7px 12px;border-radius:8px}
+  nav.appnav button:hover{color:#9c3e3e}
+  @media(max-width:560px){.wk{grid-template-columns:1fr}nav.appnav a,nav.appnav button{padding:7px 8px;font-size:12.5px}}
+</style>
+</head>
+<body>
+<header>
+  <div><span class="logo">Meal Plan <span>Pro</span></span></div>
+  <nav class="appnav">
+    <a href="thisweek.html" class="on">This Week</a>
+    <a href="myplan.html">My Plan</a>
+    <a href="settings.html">Settings</a>
+    <button id="signout" type="button">Sign out</button>
+  </nav>
+</header>
+
+<main>
+  <div class="eyebrow" id="dateline">This week</div>
+  <h1>Let's plan this week.</h1>
+  <p class="sub">Your household's set up already — tell us the dinners and the weekend, or reuse last week in one tap.</p>
+  <div id="banner" class="note" style="display:none"></div>
+
+  <div class="card strip" id="strip"></div>
+
+  <div class="card regen">
+    <div class="copy"><h3>Plan next week like last week</h3><p>Same people, same settings, a fresh set of meals.</p></div>
+    <button class="btn btn-primary" id="regenBtn">↻ Regenerate</button>
+  </div>
+
+  <div class="sectlabel">Auto from your pattern <span>— weekday breakfast &amp; lunch</span></div>
+  <div class="pattern" id="pattern"></div>
+
+  <div class="sectlabel">This week's dinners <span>— pick a mode per night</span></div>
+  <div class="card cardpad"><div id="dinners"></div></div>
+
+  <div class="sectlabel">Weekend meals <span>— breakfast, lunch and dinner</span></div>
+  <div class="card cardpad"><div class="wk" id="weekend"></div></div>
+
+  <div class="sectlabel">Anything different this week? <span>— optional</span></div>
+  <div class="card cardpad"><textarea id="exceptions" rows="2" placeholder="e.g. guests Saturday · using up the freezer · Joe out for dinner Thursday"></textarea></div>
+
+  <div class="sectlabel">Plan length</div>
+  <div class="card cardpad">
+    <div class="chip-row" id="planLen"></div>
+    <div class="actions">
+      <button class="btn btn-primary" id="genBtn">Generate this week →</button>
+      <span style="font-size:13px;color:var(--grey)">Builds your plan payload</span>
+    </div>
+  </div>
+
+  <details class="dev" id="devPanel">
+    <summary>Developer view — the exact payload POSTed to /api/plans/generate (proves the weekly → daySchedule mapping)</summary>
+    <pre id="devJson">Generate to populate…</pre>
+  </details>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="profileModel.js"></script>
+<script src="weekModel.js"></script>
+<script>
+const M = window.ProfileModel, W = window.WeekModel;
+const BACKEND = 'https://meal-plan-backend-su6p.onrender.com';
+let authToken = (typeof localStorage!=='undefined' && localStorage.getItem('authToken')) || null;
+let editingProfileId = null, demo = false;
+function api(path,method,body){const o={method:method||'GET',headers:{'Content-Type':'application/json'}};if(authToken)o.headers.Authorization='Bearer '+authToken;if(body)o.body=JSON.stringify(body);return fetch(BACKEND+path,o).then(r=>r.json());}
+
+let state = { profile: M.defaultProfile(), week: W.defaultWeek(7) };
+
+function seedDemo(){
+  const p=M.defaultProfile();
+  p.adults[0]=Object.assign(M.defaultAdult('Joe'),{age:42,sex:'Male',activity:'Moderately active',height:182,weight:79,target:76,goal:'losefat',rate:'steady',allergies:'No shellfish',dislikes:'Olives'});
+  p.adults.push(Object.assign(M.defaultAdult('Sarah'),{age:39,sex:'Female',activity:'Very active',height:168,weight:63,target:63,goal:'maintain',eating:{breakfast:'plan',lunch:'quick',snacks:2},training:{on:true,sport:'Cycling',intensity:'moderate',sessionsPerWeek:4,days:['Tue','Thu','Sat','Sun']}}));
+  p.children=[{age:6},{age:9}]; p.kids.dislikes='Anything too spicy';
+  return p;
+}
+function banner(msg,kind){const b=document.getElementById('banner');b.style.display='flex';b.style.background=kind==='warn'?'#fdf0e6':kind==='err'?'#fdd9d9':'var(--green-soft)';b.style.borderColor=kind==='warn'?'#f0c9a8':kind==='err'?'#e7b4b4':'#cfe6da';b.style.color=kind==='warn'?'#8a4b1e':kind==='err'?'#8a2f2f':'var(--green-dark)';b.innerHTML='<span>'+(kind==='warn'?'⚠️':kind==='err'?'⛔':'✓')+'</span><span>'+msg+'</span>';}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+const el=(t,a,k)=>{const e=document.createElement(t);for(const x in(a||{})){if(x==='class')e.className=a[x];else if(x.slice(0,2)==='on')e.addEventListener(x.slice(2),a[x]);else if(x==='html')e.innerHTML=a[x];else e.setAttribute(x,a[x]);}(k||[]).forEach(c=>{if(c==null)return;e.appendChild((typeof c==='string'||typeof c==='number')?document.createTextNode(String(c)):c);});return e;};
+function pick(value,opts,onchange){const s=el('select',{onchange:e=>onchange(e.target.value)});opts.forEach(o=>{const lab=Array.isArray(o)?o[1]:o,val=Array.isArray(o)?o[0]:o;const op=el('option',{},[lab]);op.value=val;if(val===value)op.selected=true;s.appendChild(op);});return s;}
+
+async function loadProfile(){
+  if(!authToken){ demo=true; state.profile=seedDemo(); render(); banner("Demo mode — not signed in, using sample data. Served inside your app it loads your real profile.",'warn'); return; }
+  banner('Loading your household…','ok');
+  try{
+    const list=await api('/api/clients'); const profs=(list&&list.profiles)||[];
+    if(profs.length){ editingProfileId=profs[0].id; const d=await api('/api/clients/'+editingProfileId); const pr=(d&&d.profile)||{};
+      state.profile=M.fromClientData({client_data:pr.client_data,children:pr.children,retailer:pr.retailer,tier:pr.tier}); banner('Loaded '+ (profs[0].name||'your household') +'.','ok'); }
+    else { banner('No saved profile yet — set one up in Settings first.','warn'); state.profile=M.defaultProfile(); }
+    demo=false; render();
+  }catch(e){ demo=true; state.profile=seedDemo(); render(); banner("Couldn't reach the backend — showing sample data.",'warn'); }
+}
+
+function render(){
+  const p=state.profile, a1=p.adults[0]||{}, a2=p.adults[1];
+  // summary strip
+  const who=(a1.name||'You')+(a2?(' & '+(a2.name||'Partner')):'');
+  const kids=p.children.length?(' · '+p.children.length+' kid'+(p.children.length>1?'s':'')+' ('+p.children.map(c=>c.age).join(', ')+')'):'';
+  const avoid=[a1.allergies,a1.dislikes,(p.kids&&p.kids.dislikes)].filter(Boolean).join(', ');
+  const strip=document.getElementById('strip'); strip.innerHTML='';
+  strip.appendChild(el('div',{class:'pget'},[(a1.name||'Y').slice(0,1)+((a2&&a2.name)?a2.name.slice(0,1):'')]));
+  strip.appendChild(el('div',{class:'facts'},[
+    el('div',{class:'who'},[who]),
+    el('div',{class:'detail'},[
+      el('span',{},[p.adults.length+' adults'+kids]),
+      avoid?el('span',{html:'<b>Avoid:</b> '+avoid}):null,
+      el('span',{html:'<b>Shop:</b> '+p.shop.retailer+' · '+(M.RANGE_LABELS[p.shop.range]||p.shop.range)}),
+    ]),
+  ]));
+  strip.appendChild(el('a',{class:'editlink',href:'settings.html'},['Edit profile ↗']));
+
+  // weekday pattern chips
+  const pat=document.getElementById('pattern'); pat.innerHTML='';
+  const lunchLabel={leftovers:'leftovers',quick:'≤30-min',out:'out/canteen'};
+  pat.appendChild(el('div',{class:'pat',html:'<b>Breakfast</b> · quick & routine'}));
+  pat.appendChild(el('div',{class:'pat',html:'<b>Adults’ lunch</b> · '+(lunchLabel[a1.eating.lunch]||'leftovers')}));
+  pat.appendChild(el('div',{class:'pat',html:'<b>Kids’ lunch</b> · '+((p.kids.eating.weekdayLunch==='school')?'school dinners':'packed')}));
+  pat.appendChild(el('div',{class:'pat',html:'<b>Snacks</b> · adults ×'+a1.eating.snacks+' · kids ×'+p.kids.eating.snacks}));
+
+  // weeknight dinners
+  const dinnerOpts=W.DINNER_MODES.map(m=>[m,W.DINNER_LABELS[m]]);
+  const dwrap=document.getElementById('dinners'); dwrap.innerHTML='';
+  ['Mon','Tue','Wed','Thu','Fri'].forEach(d=>{
+    dwrap.appendChild(el('div',{class:'dinner-row'},[el('span',{class:'d'},[d]),pick(state.week.weeknightDinners[d]||'family',dinnerOpts,v=>state.week.weeknightDinners[d]=v)]));
+  });
+
+  // weekend
+  const wwrap=document.getElementById('weekend'); wwrap.innerHTML='';
+  [['Sat','Saturday'],['Sun','Sunday']].forEach(([ab,full])=>{
+    const w=state.week.weekend[ab]||{breakfast:'cook',lunch:'cook',dinner:'family'};
+    const card=el('div',{class:'wkcard'},[el('div',{class:'wd'},[full])]);
+    card.appendChild(el('div',{class:'wkslot'},[el('span',{},['Breakfast']),pick(w.breakfast,[['cook','Cook something'],['quick','Quick & routine'],['out','Out / brunch']],v=>{w.breakfast=v;state.week.weekend[ab]=w;})]));
+    card.appendChild(el('div',{class:'wkslot'},[el('span',{},['Lunch']),pick(w.lunch,[['cook','Cook something'],['leftovers','Leftovers'],['out','Eating out']],v=>{w.lunch=v;state.week.weekend[ab]=w;})]));
+    card.appendChild(el('div',{class:'wkslot'},[el('span',{},['Dinner']),pick(w.dinner,W.DINNER_MODES.map(m=>[m,W.DINNER_LABELS[m]]),v=>{w.dinner=v;state.week.weekend[ab]=w;})]));
+    state.week.weekend[ab]=w; wwrap.appendChild(card);
+  });
+
+  // plan length
+  const pl=document.getElementById('planLen'); pl.innerHTML='';
+  [3,5,7,14].forEach(n=>pl.appendChild(el('div',{class:'chip'+(state.week.days===n?' on':''),onclick:()=>{state.week.days=n;render();}},[n+' days'])));
+}
+
+function assemblePayload(){
+  const flat=M.toClientData(state.profile);
+  flat.client.days=state.week.days;
+  const ex=document.getElementById('exceptions').value.trim();
+  if(ex) flat.client.notes=(flat.client.notes?flat.client.notes+' · ':'')+ex;
+  const daySchedule=W.buildDaySchedule(state.profile,state.week);
+  return { clientData:flat.client, children:flat.children, sharingMode:flat.sharingMode, daySchedule:daySchedule, retailer:flat.retailer, tier:flat.tier, clientProfileId:editingProfileId||null };
+}
+
+async function generate(){
+  const payload=assemblePayload();
+  document.getElementById('devJson').textContent=JSON.stringify(payload,null,2);
+  document.getElementById('devPanel').open=true;
+  if(demo||!authToken){ toast('Payload assembled (demo) — sign in to generate a real plan. See the developer view for the daySchedule mapping.'); return; }
+  const btn=document.getElementById('genBtn'); btn.disabled=true; const label=btn.textContent; btn.textContent='Generating…';
+  toast('Generating your week… (this can take ~20s)');
+  try{
+    const res=await api('/api/plans/generate','POST',payload);
+    if(res&&res.success&&res.plan){
+      // Hand the fresh plan to My Plan via sessionStorage (always works), and
+      // pass the saved id in the URL when the plan was persisted.
+      try{ sessionStorage.setItem('mpp_plan',JSON.stringify(res.plan)); }catch(e){}
+      toast('Plan ready ✓ — opening your week…');
+      const q=res.planId?('?plan='+encodeURIComponent(res.planId)):'';
+      location.href='myplan.html'+q;
+      return;
+    }
+    else { toast('Generate failed: '+((res&&res.error)||'unknown')); btn.disabled=false; btn.textContent=label; }
+  }catch(e){ toast('Generate failed — '+(e.message||'network error')); btn.disabled=false; btn.textContent=label; }
+}
+
+document.getElementById('genBtn').addEventListener('click',generate);
+document.getElementById('regenBtn').addEventListener('click',()=>{ state.week=W.defaultWeek(state.week.days); render(); generate(); });
+document.getElementById('signout').addEventListener('click',()=>{ try{localStorage.removeItem('authToken');localStorage.removeItem('currentUser');}catch(e){} location.href='login.html'; });
+
+render();
+loadProfile();
+</script>
+</body>
+</html>

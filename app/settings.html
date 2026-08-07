@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Plan Pro — Profile &amp; Settings (rebuild)</title>
+<style>
+  :root{
+    --green:#1a8f5a; --green-dark:#15784a; --green-accent:#3da972; --green-soft:#e5f2ea;
+    --cream:#f4ede4; --cream-deep:#ebe1d2; --white:#fff;
+    --ink:#1f1f1f; --ink-soft:#3d3d3d; --grey:#7d7d7d; --grey-light:#b8b3a9; --rule:#e2dccf;
+    --shadow-sm:0 6px 18px -10px rgba(31,31,31,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;background:var(--cream);color:var(--ink);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  header{border-bottom:1px solid var(--rule);padding:16px 28px;display:flex;justify-content:space-between;align-items:center;background:rgba(244,237,228,.94);position:sticky;top:0;z-index:40}
+  .logo{font-size:20px;font-weight:700}.logo span{color:var(--green-accent)}
+  .badge{font-size:11px;font-weight:600;color:var(--green-dark);background:var(--green-soft);border:1px solid #cfe6da;padding:3px 9px;border-radius:999px;margin-left:10px}
+  main{max-width:760px;margin:0 auto;padding:28px 24px 120px}
+  .eyebrow{font-size:12.5px;font-weight:600;color:var(--green);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+  h1{font-size:32px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+  .sub{font-size:15px;color:var(--ink-soft);margin-bottom:24px}
+  .note{display:flex;gap:12px;align-items:flex-start;background:var(--green-soft);border:1px solid #cfe6da;border-radius:12px;padding:14px 16px;font-size:13.5px;color:var(--green-dark);margin-bottom:22px}
+  .acc{border:1px solid var(--rule);border-radius:14px;background:var(--white);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-sm)}
+  .acc-head{display:flex;align-items:center;gap:14px;padding:18px 20px;cursor:pointer;user-select:none}
+  .acc-ic{width:38px;height:38px;border-radius:10px;background:var(--green-soft);color:var(--green-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+  .acc-tt{flex:1}.acc-tt .t{font-size:15.5px;font-weight:700}.acc-tt .s{font-size:13px;color:var(--grey);margin-top:2px}
+  .acc-tick{color:var(--green);font-size:18px}
+  .acc-caret{color:var(--grey-light);transition:transform .2s}.acc.open .acc-caret{transform:rotate(180deg)}
+  .acc-body{max-height:0;overflow:hidden;transition:max-height .3s ease}.acc.open .acc-body{max-height:3000px}
+  .acc-inner{padding:4px 20px 22px}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.frow.c3{grid-template-columns:1fr 1fr 1fr}.frow.c1{grid-template-columns:1fr}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+  label .sub2{font-weight:400;color:var(--grey)}
+  input[type=text],input[type=number],input[type=date],select{width:100%;font-family:inherit;font-size:14.5px;color:var(--ink);padding:11px 13px;border:1px solid var(--rule);border-radius:10px;background:var(--white)}
+  input:focus,select:focus{outline:none;border-color:var(--green-accent);box-shadow:0 0 0 3px var(--green-soft)}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1px solid var(--rule);background:var(--white);color:var(--ink-soft);padding:9px 15px;border-radius:999px;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+  .chip:hover{border-color:var(--green-accent)}.chip.on{background:var(--green);border-color:var(--green);color:#fff}
+  .chip.dis{opacity:.4;pointer-events:none}
+  .person-label{font-size:13px;font-weight:700;margin:2px 0 12px;display:flex;justify-content:space-between;align-items:center}
+  .rm-link{font-size:12px;font-weight:600;color:#9c3e3e;background:none;border:none;cursor:pointer;font-family:inherit}
+  .divider{height:1px;background:var(--rule);margin:18px 0}
+  .goal-eff{margin-top:10px;font-size:12px;color:var(--green-dark);background:var(--green-soft);border:1px solid #cfe6da;border-radius:8px;padding:9px 12px;line-height:1.45}
+  .rate-rec{font-size:11px;color:var(--green-dark);margin-top:7px}.rate-rec.muted{color:var(--grey)}
+  .add-btn{background:var(--white);border:1px dashed var(--grey-light);color:var(--green-dark);padding:10px 16px;border-radius:10px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+  .add-btn:hover{border-color:var(--green);background:var(--green-soft)}
+  .btn{border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:10px;padding:13px 22px;font-size:15px;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:var(--green-dark)}
+  .btn-ghost{background:var(--white);color:var(--ink);border:1px solid var(--rule)}
+  .savebar{position:fixed;bottom:0;left:0;right:0;background:rgba(244,237,228,.96);backdrop-filter:blur(8px);border-top:1px solid var(--rule);padding:14px 24px}
+  .savebar-inner{max-width:760px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between}
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;opacity:0;transition:all .3s;z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  details.dev{margin-top:20px;border:1px dashed var(--grey-light);border-radius:10px;padding:12px 14px;background:#fbf8f3}
+  details.dev summary{font-size:13px;font-weight:600;color:var(--grey);cursor:pointer}
+  details.dev pre{margin-top:10px;font-size:11.5px;line-height:1.5;color:var(--ink-soft);white-space:pre-wrap;word-break:break-word;max-height:340px;overflow:auto}
+  nav.appnav{display:flex;align-items:center;gap:4px}
+  nav.appnav a{font-size:13.5px;font-weight:600;color:var(--ink-soft);text-decoration:none;padding:7px 12px;border-radius:8px}
+  nav.appnav a:hover{background:var(--green-soft);color:var(--green-dark)}
+  nav.appnav a.on{color:var(--green-dark);background:var(--green-soft)}
+  nav.appnav button{background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--grey);cursor:pointer;padding:7px 12px;border-radius:8px}
+  nav.appnav button:hover{color:#9c3e3e}
+  @media(max-width:560px){.frow,.frow.c3{grid-template-columns:1fr}nav.appnav a,nav.appnav button{padding:7px 8px;font-size:12.5px}}
+</style>
+</head>
+<body>
+<header>
+  <div><span class="logo">Meal Plan <span>Pro</span></span></div>
+  <nav class="appnav">
+    <a href="thisweek.html">This Week</a>
+    <a href="myplan.html">My Plan</a>
+    <a href="settings.html" class="on">Settings</a>
+    <button id="signout" type="button">Sign out</button>
+  </nav>
+</header>
+
+<main>
+  <div class="eyebrow">Set up once</div>
+  <h1>Your household profile.</h1>
+  <p class="sub">Every field here reads and writes through the shared data layer. Hit Save to serialise to the exact <code>client_data</code> your backend stores, then Reload to prove it round-trips.</p>
+  <div class="note"><span>ℹ️</span><span>This is the real profile model driving the UI — the same object Onboarding and This Week will use. Changes flow into your next generated plan.</span></div>
+  <div id="banner" class="note" style="display:none"></div>
+
+  <div id="accordions"></div>
+
+  <details class="dev" id="devPanel">
+    <summary>Developer view — serialised client_data (what gets POSTed to /api/clients)</summary>
+    <pre id="devJson">Save to populate…</pre>
+  </details>
+</main>
+
+<div class="savebar">
+  <div class="savebar-inner">
+    <button class="btn btn-ghost" id="reloadBtn">↻ Reload from saved</button>
+    <button class="btn btn-primary" id="saveBtn">Save profile</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="profileModel.js"></script>
+<script>
+const M = window.ProfileModel;
+
+// ── Live backend config (matches the app) ──
+const BACKEND = 'https://meal-plan-backend-su6p.onrender.com';
+let authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('authToken')) || null;
+let editingProfileId = null;
+let demo = false;
+
+function api(path, method, body){
+  const opts = { method: method || 'GET', headers: { 'Content-Type': 'application/json' } };
+  if(authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
+  if(body) opts.body = JSON.stringify(body);
+  return fetch(BACKEND + path, opts).then(r => r.json());
+}
+
+function seedDemoProfile(){
+  const p = M.defaultProfile();
+  p.adults[0] = Object.assign(M.defaultAdult('Joe'), {age:42,sex:'Male',activity:'Moderately active',height:182,weight:79,target:76,goal:'losefat',rate:'steady',emphasis:['Energy'],allergies:'No shellfish',dislikes:'Olives, liver'});
+  p.adults.push(Object.assign(M.defaultAdult('Sarah'), {age:39,sex:'Female',activity:'Very active',height:168,weight:63,target:63,goal:'maintain',emphasis:['Energy','Recovery','Longevity'],dislikes:'Blue cheese',eating:{breakfast:'plan',lunch:'quick',snacks:2},training:{on:true,sport:'Cycling',intensity:'moderate',sessionsPerWeek:4,weeksToEvent:12,eventDate:'',carbLoad:'auto',days:['Tue','Thu','Sat','Sun']}}));
+  p.children=[{age:6},{age:9}]; p.kids.dislikes='Anything too spicy, peppers';
+  return p;
+}
+
+let state = { profile: M.defaultProfile() };
+
+function banner(msg, kind){
+  const b = document.getElementById('banner');
+  b.style.display = 'flex';
+  b.style.background  = kind==='warn' ? '#fdf0e6' : kind==='err' ? '#fdd9d9' : 'var(--green-soft)';
+  b.style.borderColor = kind==='warn' ? '#f0c9a8' : kind==='err' ? '#e7b4b4' : '#cfe6da';
+  b.style.color       = kind==='warn' ? '#8a4b1e' : kind==='err' ? '#8a2f2f' : 'var(--green-dark)';
+  b.innerHTML = '<span>' + (kind==='warn'?'⚠️':kind==='err'?'⛔':'✓') + '</span><span>' + msg + '</span>';
+}
+
+function enterDemo(msg){ demo = true; state.profile = seedDemoProfile(); render(); banner(msg, 'warn'); }
+
+async function loadProfile(){
+  if(!authToken){ enterDemo("Demo mode — not signed in, so this shows sample data. Served inside your app (where you're logged in) it loads your real profile."); return; }
+  banner('Loading your profile…', 'ok');
+  try{
+    const list = await api('/api/clients');
+    const profiles = (list && list.profiles) || [];
+    if(profiles.length){
+      editingProfileId = profiles[0].id;
+      const detail = await api('/api/clients/' + editingProfileId);
+      const prof = (detail && detail.profile) || {};
+      state.profile = M.fromClientData({ client_data: prof.client_data, children: prof.children, retailer: prof.retailer, tier: prof.tier });
+      banner('Loaded your saved profile.', 'ok');
+    } else {
+      editingProfileId = null;
+      state.profile = M.defaultProfile();
+      banner('No saved profile yet — fill this in and Save to create one.', 'ok');
+    }
+    demo = false;
+    render();
+  }catch(e){
+    enterDemo("Couldn't reach the backend — showing sample data (" + (e.message || 'network error') + ').');
+  }
+}
+
+// ── rate-aware goal explainer (mirrors nutrition.js semantics) ──
+const GOAL_LOGIC = {
+  loseweight:{rated:true,dir:'loss',k:{gentle:-300,steady:-500,aggressive:-750},protein:'~1.6 g/kg'},
+  losefat:{rated:true,dir:'loss',k:{gentle:-250,steady:-350,aggressive:-550},protein:'1.8–2.2 g/kg'},
+  recomp:{rated:false,protein:'2.0–2.2 g/kg'},
+  maintain:{rated:false,protein:'1.4–1.6 g/kg'},
+  buildmuscle:{rated:true,dir:'gain',k:{gentle:200,steady:300,aggressive:450},protein:'1.6–2.2 g/kg'},
+  gainweight:{rated:true,dir:'gain',k:{gentle:300,steady:500,aggressive:700},protein:'~1.6 g/kg'},
+};
+function goalText(goal,rate){
+  const g=GOAL_LOGIC[goal]; if(!g) return '';
+  if(!g.rated) return `Calories sit at/around maintenance · protein ${g.protein}. Rate doesn't apply.`;
+  const d=g.k[rate]; const sign=d<0?'−':'+';
+  return `About ${sign}${Math.abs(d)} kcal/day vs maintenance · protein ${g.protein}.`;
+}
+
+// ── tiny DOM helpers ──
+const el=(t,a,kids)=>{const e=document.createElement(t);for(const k in(a||{})){if(k==='class')e.className=a[k];else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),a[k]);else if(k==='html')e.innerHTML=a[k];else e.setAttribute(k,a[k]);}(kids||[]).forEach(c=>{if(c==null)return;e.appendChild((typeof c==='string'||typeof c==='number')?document.createTextNode(String(c)):c);});return e;};
+function sel(value,opts,onchange){const s=el('select',{onchange:e=>onchange(e.target.value)});opts.forEach(o=>{const label=Array.isArray(o)?o[1]:o,val=Array.isArray(o)?o[0]:o;const op=el('option',{},[label]);op.value=val;if(String(val)===String(value))op.selected=true;s.appendChild(op);});return s;}
+function txt(value,onchange,type){const i=el('input',{type:type||'text',oninput:e=>onchange(e.target.value)});i.value=value==null?'':value;return i;}
+function field(labelHtml,control){return el('div',{},[el('label',{html:labelHtml}),control]);}
+function chips(options,selected,multi,onpick){
+  const row=el('div',{class:'chip-row'});
+  options.forEach(o=>{const label=Array.isArray(o)?o[1]:o,val=Array.isArray(o)?o[0]:o;
+    const on=multi?selected.includes(val):selected===val;
+    row.appendChild(el('div',{class:'chip'+(on?' on':''),onclick:()=>onpick(val)},[label]));});
+  return row;
+}
+
+// ── accordion builder ──
+function accordion(icon,title,summary,open,bodyNodes){
+  const acc=el('div',{class:'acc'+(open?' open':'')});
+  const head=el('div',{class:'acc-head',onclick:()=>acc.classList.toggle('open')},[
+    el('div',{class:'acc-ic'},[icon]),
+    el('div',{class:'acc-tt'},[el('div',{class:'t'},[title]),el('div',{class:'s'},[summary])]),
+    el('span',{class:'acc-tick'},['✓']),
+    el('span',{class:'acc-caret'},['▾']),
+  ]);
+  const body=el('div',{class:'acc-body'},[el('div',{class:'acc-inner'},bodyNodes)]);
+  acc.appendChild(head);acc.appendChild(body);return acc;
+}
+
+function adultBlock(a,i){
+  const wrap=el('div',{});
+  const header=el('div',{class:'person-label'},[el('span',{},[i===0?'You':(a.name||'Partner')])]);
+  if(i===1)header.appendChild(el('button',{class:'rm-link',onclick:()=>{state.profile.adults.splice(1,1);render();}},['Remove partner']));
+  wrap.appendChild(header);
+
+  wrap.appendChild(el('div',{class:'frow c3'},[
+    field('Name',txt(a.name,v=>a.name=v)),
+    field('Age',txt(a.age,v=>a.age=v,'number')),
+    field('Sex',sel(a.sex,['Male','Female','Prefer not to say'],v=>a.sex=v)),
+  ]));
+  wrap.appendChild(el('div',{class:'frow c3'},[
+    field('Activity',sel(a.activity,['Sedentary','Lightly active','Moderately active','Very active','Extra active'],v=>a.activity=v)),
+    field('Height (cm)',txt(a.height,v=>a.height=v,'number')),
+    field('Weight (kg)',txt(a.weight,v=>a.weight=v,'number')),
+  ]));
+
+  // Goal + rate + emphasis + live explainer
+  const eff=el('div',{class:'goal-eff'});
+  const rateRec=el('div',{class:'rate-rec'});
+  const rateWrap=el('div',{class:'chip-row'});
+  function paintGoal(){
+    eff.textContent=goalText(a.goal,a.rate);
+    const rated=GOAL_LOGIC[a.goal].rated;
+    [...rateWrap.children].forEach(c=>c.classList.toggle('dis',!rated));
+    rateRec.className='rate-rec'+(rated?'':' muted');
+    rateRec.textContent=rated?'✓ We recommend Steady for lasting results.':"Rate doesn't apply to this goal.";
+  }
+  const goalChips=chips(M.GOALS.map(g=>[g,M.GOAL_LABELS[g]]),a.goal,false,v=>{a.goal=v;[...goalChips.children].forEach((c,idx)=>c.classList.toggle('on',M.GOALS[idx]===v));paintGoal();});
+  M.RATES.forEach(r=>rateWrap.appendChild(el('div',{class:'chip'+(a.rate===r?' on':''),onclick:()=>{a.rate=r;[...rateWrap.children].forEach(c=>c.classList.remove('on'));event.target.classList.add('on');paintGoal();}},[r[0].toUpperCase()+r.slice(1)])));
+  wrap.appendChild(field('Primary goal <span class="sub2">— sets the daily calorie target</span>',goalChips));
+  wrap.appendChild(eff);
+  wrap.appendChild(el('div',{class:'frow'},[
+    (function(){const d=el('div',{});d.appendChild(el('label',{html:'Rate <span class="sub2">— loss/gain only</span>'}));d.appendChild(rateWrap);d.appendChild(rateRec);return d;})(),
+    field('Dietary emphasis <span class="sub2">— shapes food, not calories</span>',chips(M.EMPHASIS,a.emphasis,true,v=>{const idx=a.emphasis.indexOf(v);if(idx>=0)a.emphasis.splice(idx,1);else a.emphasis.push(v);render();})),
+  ]));
+  paintGoal();
+  return wrap;
+}
+
+function trainingBlock(a,i){
+  const wrap=el('div',{});
+  wrap.appendChild(el('div',{class:'person-label'},[el('span',{},[i===0?'You':(a.name||'Partner')])]));
+  wrap.appendChild(el('div',{class:'frow c3'},[
+    field('Training for something?',sel(a.training.on?'yes':'no',[['no','No (general health)'],['yes','Yes']],v=>{a.training.on=(v==='yes');render();})),
+    field('Sport',sel(a.training.sport,[''].concat(M.SPORTS),v=>a.training.sport=v)),
+    field('Intensity',sel(a.training.intensity,['easy','moderate','hard'],v=>a.training.intensity=v)),
+  ]));
+  wrap.appendChild(el('div',{class:'frow c3'},[
+    field('Sessions / week',txt(a.training.sessionsPerWeek,v=>a.training.sessionsPerWeek=v,'number')),
+    field('Event date <span class="sub2">— auto race-week</span>',txt(a.training.eventDate,v=>a.training.eventDate=v,'date')),
+    field('Carb loading',sel(a.training.carbLoad,[['auto','Auto — race week'],['on','Always on'],['off','Off']],v=>a.training.carbLoad=v)),
+  ]));
+  return wrap;
+}
+
+function render(){
+  const p=state.profile, root=document.getElementById('accordions'); root.innerHTML='';
+  const adultNames=p.adults.map((a,i)=>i===0?(a.name||'You'):(a.name||'Partner')).join(' · ');
+
+  // Adults
+  const adultsBody=[];
+  p.adults.forEach((a,i)=>{adultsBody.push(adultBlock(a,i));if(i<p.adults.length-1)adultsBody.push(el('div',{class:'divider'}));});
+  if(p.adults.length<2)adultsBody.push(el('button',{class:'add-btn',onclick:()=>{state.profile.adults.push(M.defaultAdult('Partner'));render();}},['+ Add another adult']));
+  root.appendChild(accordion('👤','Adults',adultNames,true,adultsBody));
+
+  // Children
+  const kidsBody=[];
+  p.children.forEach((ch,i)=>{kidsBody.push(el('div',{class:'frow'},[
+    field('Child '+(i+1)+' age',txt(ch.age,v=>ch.age=v,'number')),
+    (function(){const d=el('div',{style:'display:flex;align-items:flex-end'});d.appendChild(el('button',{class:'rm-link',onclick:()=>{p.children.splice(i,1);render();}},['Remove']));return d;})(),
+  ]));});
+  kidsBody.push(el('button',{class:'add-btn',onclick:()=>{p.children.push({age:''});render();}},['+ Add a child']));
+  root.appendChild(accordion('🧒','Children',p.children.length?p.children.length+' · ages '+p.children.map(c=>c.age).join(', '):'None added',false,kidsBody));
+
+  // Allergies (per person)
+  const alBody=[];
+  p.adults.forEach((a,i)=>{alBody.push(el('div',{class:'person-label'},[el('span',{},[i===0?'You':(a.name||'Partner')])]));
+    alBody.push(el('div',{class:'frow'},[field('Allergies',txt(a.allergies,v=>a.allergies=v)),field('Dislikes',txt(a.dislikes,v=>a.dislikes=v))]));});
+  alBody.push(el('div',{class:'person-label'},[el('span',{},['Children'])]));
+  alBody.push(el('div',{class:'frow'},[field('Allergies',txt(p.kids.allergies,v=>p.kids.allergies=v)),field('Dislikes',txt(p.kids.dislikes,v=>p.kids.dislikes=v))]));
+  root.appendChild(accordion('⚠️','Allergies & dislikes','Per person — never shared by mistake',false,alBody));
+
+  // Weekday eating pattern
+  const epBody=[];
+  p.adults.forEach((a,i)=>{epBody.push(el('div',{class:'person-label'},[el('span',{},[i===0?'You':(a.name||'Partner')])]));
+    epBody.push(el('div',{class:'frow c3'},[
+      field('Breakfast',sel(a.eating.breakfast,[['quick','Quick & routine'],['plan','Plan it'],['skip','Skip']],v=>a.eating.breakfast=v)),
+      field('Lunch',sel(a.eating.lunch,[['leftovers','Leftovers / batch'],['quick','Quick lunch (≤30 min)'],['out','Out / canteen']],v=>a.eating.lunch=v)),
+      field('Snacks / day',sel(a.eating.snacks,[0,1,2],v=>a.eating.snacks=+v)),
+    ]));});
+  epBody.push(el('div',{class:'person-label'},[el('span',{},['Children'])]));
+  epBody.push(el('div',{class:'frow c3'},[
+    field('Breakfast',sel(p.kids.eating.breakfast,[['quick','Quick & routine'],['plan','Plan it']],v=>p.kids.eating.breakfast=v)),
+    field('Weekday lunch',sel(p.kids.eating.weekdayLunch,[['packed','Packed lunch'],['school','School dinners']],v=>p.kids.eating.weekdayLunch=v)),
+    field('Snacks / day',sel(p.kids.eating.snacks,[0,1,2],v=>p.kids.eating.snacks=+v)),
+  ]));
+  root.appendChild(accordion('📅','Weekday eating pattern','Dinner cooked · adults leftovers/quick · kids packed',false,epBody));
+
+  // Supermarket & range
+  const shopBody=[el('div',{class:'frow'},[
+    field('Preferred supermarket',sel(p.shop.retailer,M.RETAILERS,v=>p.shop.retailer=v)),
+    field('Product range',chips(M.RANGES.map(r=>[r,M.RANGE_LABELS[r]]),p.shop.range,false,v=>{p.shop.range=v;render();})),
+  ])];
+  root.appendChild(accordion('🛒','Supermarket & range',p.shop.retailer+' · '+M.RANGE_LABELS[p.shop.range],false,shopBody));
+
+  // Training
+  const trBody=[];
+  p.adults.forEach((a,i)=>{trBody.push(trainingBlock(a,i));if(i<p.adults.length-1)trBody.push(el('div',{class:'divider'}));});
+  const trSummary=p.adults.map((a,i)=>(i===0?'You':(a.name||'Partner'))+': '+(a.training.on?(a.training.sport||'training'):'general health')).join(' · ');
+  root.appendChild(accordion('⏱️','Training & sport',trSummary,false,trBody));
+}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  // Serialise via the data layer → this is the exact POST /api/clients body.
+  const body = M.toClientData(state.profile);
+  if(editingProfileId) body.id = editingProfileId;   // update existing vs create
+  document.getElementById('devJson').textContent = JSON.stringify(body, null, 2);
+  document.getElementById('devPanel').open = true;
+  if(demo || !authToken){ toast('Saved (demo) — serialised to client_data'); return; }
+  toast('Saving…');
+  try{
+    const res = await api('/api/clients', 'POST', body);
+    if(res && res.success && res.profile){
+      editingProfileId = res.profile.id;
+      toast('Saved ✓ to your account');
+      banner('Saved. Your next generated plan will use these details.', 'ok');
+    } else {
+      const msg = (res && res.error) || (res && res.errors && res.errors[0] && res.errors[0].msg) || 'unknown error';
+      toast('Save failed: ' + msg);
+    }
+  }catch(e){ toast('Save failed — ' + (e.message || 'network error')); }
+});
+document.getElementById('reloadBtn').addEventListener('click', ()=>{
+  if(demo || !authToken){ state.profile = seedDemoProfile(); render(); toast('Reloaded (demo)'); return; }
+  loadProfile().then(()=>toast('Reloaded from your account'));
+});
+
+const _so=document.getElementById('signout'); if(_so) _so.addEventListener('click',()=>{ try{localStorage.removeItem('authToken');localStorage.removeItem('currentUser');}catch(e){} location.href='login.html'; });
+
+render();        // initial paint, then hydrate from the API
+loadProfile();
+</script>
+</body>
+</html>
