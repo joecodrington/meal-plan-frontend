@@ -202,7 +202,6 @@ function stepBody(n){
     if(a2)row((a2.name||'Partner')+"'s goal",M.GOAL_LABELS[a2.goal]);
     row('Shop',p.shop.retailer+' · '+M.RANGE_LABELS[p.shop.range]);
     box.appendChild(sum);
-    const dev=el('details',{class:'dev'},[el('summary',{},['Developer view — client_data this writes to /api/clients']),el('pre',{id:'devJson'},['Press “Create my first plan”…'])]);box.appendChild(dev);
   }
   return box;
 }
@@ -240,7 +239,6 @@ async function createPlan(){
     toast('Demo — assembled client_data shown in the developer view.');
   }
   step=TOTAL+1; renderStep();                    // → done / summary screen
-  const dj=document.getElementById('devJson'); if(dj) dj.textContent=JSON.stringify(body,null,2);
 }
 
 // nav

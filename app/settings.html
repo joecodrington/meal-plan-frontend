@@ -84,10 +84,6 @@
 
   <div id="accordions"></div>
 
-  <details class="dev" id="devPanel">
-    <summary>Developer view — serialised client_data (what gets POSTed to /api/clients)</summary>
-    <pre id="devJson">Save to populate…</pre>
-  </details>
 </main>
 
 <div class="savebar">
@@ -321,9 +317,7 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
   // Serialise via the data layer → this is the exact POST /api/clients body.
   const body = M.toClientData(state.profile);
   if(editingProfileId) body.id = editingProfileId;   // update existing vs create
-  document.getElementById('devJson').textContent = JSON.stringify(body, null, 2);
-  document.getElementById('devPanel').open = true;
-  if(demo || !authToken){ toast('Saved (demo) — serialised to client_data'); return; }
+  if(demo || !authToken){ toast('Demo mode — sign in to save your household.'); return; }
   toast('Saving…');
   try{
     const res = await api('/api/clients', 'POST', body);

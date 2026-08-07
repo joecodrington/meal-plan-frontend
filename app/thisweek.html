@@ -109,10 +109,6 @@
     </div>
   </div>
 
-  <details class="dev" id="devPanel">
-    <summary>Developer view — the exact payload POSTed to /api/plans/generate (proves the weekly → daySchedule mapping)</summary>
-    <pre id="devJson">Generate to populate…</pre>
-  </details>
 </main>
 <div class="toast" id="toast"></div>
 
@@ -211,9 +207,7 @@ function assemblePayload(){
 
 async function generate(){
   const payload=assemblePayload();
-  document.getElementById('devJson').textContent=JSON.stringify(payload,null,2);
-  document.getElementById('devPanel').open=true;
-  if(demo||!authToken){ toast('Payload assembled (demo) — sign in to generate a real plan. See the developer view for the daySchedule mapping.'); return; }
+  if(demo||!authToken){ toast('Demo mode — sign in to generate your real plan for the week.'); return; }
   const btn=document.getElementById('genBtn'); btn.disabled=true; const label=btn.textContent; btn.textContent='Generating…';
   toast('Generating your week… (this can take ~20s)');
   try{
