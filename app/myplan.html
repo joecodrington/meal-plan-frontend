@@ -130,7 +130,9 @@ const BACKEND='https://meal-plan-backend-su6p.onrender.com';
 let authToken=(typeof localStorage!=='undefined'&&localStorage.getItem('authToken'))||null;
 function api(path,method,body){const o={method:method||'GET',headers:{'Content-Type':'application/json'}};if(authToken)o.headers.Authorization='Bearer '+authToken;if(body)o.body=JSON.stringify(body);return fetch(BACKEND+path,o).then(r=>r.json());}
 
-let currentPlan=null;   // the plan being viewed (mutated by swaps)
+let currentPlan=null;    // the plan being viewed
+let currentPlanId=null;  // the saved plan id (needed for a full swap)
+let shoppingShown=false; // whether the shopping list is currently revealed
 
 // ── themed "photo" tile (stand-in for the matched stock library) ──
 function tile(theme){
@@ -283,24 +285,44 @@ async function openSwap(di,mi){
     alts.forEach((a,i)=>{ html+=`<div class="alt" data-i="${i}"><div class="an">${esc(a.name)}</div><div class="ad">${esc(a.description||'')}</div>${a.kcal?`<div class="ak">${Math.round(a.kcal)} kcal</div>`:''}</div>`; });
     html+=`<button class="close" id="mc">Keep the original</button>`;
     modal.innerHTML=html;
-    modal.querySelectorAll('.alt').forEach(node=>node.addEventListener('click',()=>{
-      const a=alts[+node.dataset.i];
-      const m=currentPlan.days[di].meals[mi];
-      m.name=a.name; m.kcal=a.kcal!=null?a.kcal:m.kcal;
-      // the swap endpoint returns name/desc/kcal only — clear stale macro figures
-      delete m.protein_g; delete m.carbs_g; delete m.fat_g; delete m.omega3_mg;
-      closeModal();
-      render(currentPlan);            // re-paint (keeps shopping button state)
-      const b=document.getElementById('banner');
-      b.style.display='flex';b.style.background='var(--green-soft)';b.style.borderColor='#cfe6da';b.style.color='var(--green-dark)';
-      b.innerHTML='<span>✓</span><span>Swapped in “'+esc(a.name)+'”. (Regenerate the week to refresh its shopping items.)</span>';
-    }));
+    modal.querySelectorAll('.alt').forEach(node=>node.addEventListener('click',()=>applySwap(di,mi,alts[+node.dataset.i])));
     document.getElementById('mc').addEventListener('click',closeModal);
   }catch(e){
     modal.innerHTML=`<h3>Swap this meal</h3><div class="msub">Couldn’t reach the server. Try again.</div><button class="close" id="mc">Close</button>`;
     document.getElementById('mc').addEventListener('click',closeModal);
   }
 }
+// Apply the chosen replacement: full swap via the backend so nutrition AND the
+// shopping list are rebuilt consistently, then re-render the whole plan.
+async function applySwap(di,mi,alt){
+  if(!currentPlanId || !authToken){
+    // No saved plan to rebuild against — fall back to an in-view name/kcal swap.
+    const m=currentPlan.days[di].meals[mi];
+    m.name=alt.name; m.kcal=alt.kcal!=null?alt.kcal:m.kcal;
+    delete m.protein_g; delete m.carbs_g; delete m.fat_g; delete m.omega3_mg;
+    closeModal(); render(currentPlan);
+    banner('Swapped in “'+esc(alt.name)+'”. Sign in with a saved plan to also rebuild macros & shopping.','warn');
+    return;
+  }
+  modal.innerHTML=`<h3>Updating your plan…</h3><div class="msub">Rebuilding “${esc(alt.name)}”, its macros and your shopping list. This takes ~15–20 seconds.</div><div class="loading">Working…</div>`;
+  try{
+    const res=await api('/api/plans/'+currentPlanId+'/apply-swap','POST',{dayIndex:di,mealIndex:mi,replacementName:alt.name});
+    if(res&&res.success&&res.plan){
+      const keepShopping=shoppingShown;
+      closeModal();
+      render(res.plan);
+      if(keepShopping){ renderShopping(currentPlan); const b=document.getElementById('approveBtn'); if(b){b.textContent='Approved ✓ — shopping list below';b.disabled=true;} }
+      banner('Swapped in “'+esc(alt.name)+'” — calories, macros and shopping list updated'+(res.saved?' and saved.':'.'),'ok');
+    }else{
+      modal.innerHTML=`<h3>Couldn’t apply the swap</h3><div class="msub">${esc((res&&res.error)||'Please try again.')}</div><button class="close" id="mc">Close</button>`;
+      document.getElementById('mc').addEventListener('click',closeModal);
+    }
+  }catch(e){
+    modal.innerHTML=`<h3>Couldn’t apply the swap</h3><div class="msub">Couldn’t reach the server. Your plan is unchanged — try again.</div><button class="close" id="mc">Close</button>`;
+    document.getElementById('mc').addEventListener('click',closeModal);
+  }
+}
+
 document.getElementById('days').addEventListener('click',e=>{
   const btn=e.target.closest('.swap'); if(!btn)return;
   openSwap(+btn.dataset.di,+btn.dataset.mi);
@@ -309,6 +331,7 @@ document.getElementById('days').addEventListener('click',e=>{
 // approve → reveal shopping list
 document.getElementById('approveBtn').addEventListener('click',()=>{
   if(!currentPlan)return;
+  shoppingShown=true;
   renderShopping(currentPlan);
   const btn=document.getElementById('approveBtn');
   btn.textContent='Approved ✓ — shopping list below';
@@ -358,6 +381,7 @@ function unwrapPlan(x){
 }
 
 async function init(){
+  currentPlanId = new URLSearchParams(location.search).get('plan');   // saved-plan id (both entry paths carry it)
   // 1. Fresh hand-off from This Week (most reliable) — consume once.
   try{
     const fresh=sessionStorage.getItem('mpp_plan');
