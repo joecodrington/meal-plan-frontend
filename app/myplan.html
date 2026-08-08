@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meal Plan Pro — My Plan (rebuild)</title>
+<title>Meal Plan Pro — My Plan</title>
 <style>
   :root{
     --green:#1a8f5a;--green-dark:#15784a;--green-accent:#3da972;--green-soft:#e5f2ea;
@@ -16,11 +16,22 @@
   body{font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;background:var(--cream);color:var(--ink);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
   header{border-bottom:1px solid var(--rule);padding:16px 28px;display:flex;justify-content:space-between;align-items:center;background:rgba(244,237,228,.94);position:sticky;top:0;z-index:40}
   .logo{font-size:20px;font-weight:700}.logo span{color:var(--green-accent)}
-  .badge{font-size:11px;font-weight:600;color:var(--green-dark);background:var(--green-soft);border:1px solid #cfe6da;padding:3px 9px;border-radius:999px;margin-left:10px}
+  nav.appnav{display:flex;align-items:center;gap:4px}
+  nav.appnav a{font-size:13.5px;font-weight:600;color:var(--ink-soft);text-decoration:none;padding:7px 12px;border-radius:8px}
+  nav.appnav a:hover{background:var(--green-soft);color:var(--green-dark)}
+  nav.appnav a.on{color:var(--green-dark);background:var(--green-soft)}
+  nav.appnav button{background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--grey);cursor:pointer;padding:7px 12px;border-radius:8px}
+  nav.appnav button:hover{color:#9c3e3e}
   main{max-width:960px;margin:0 auto;padding:28px 24px 110px}
   .eyebrow{font-size:12.5px;font-weight:600;color:var(--green);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
   h1{font-size:32px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
   .note{display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:12px 15px;font-size:13.5px;margin:14px 0 4px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:10px;padding:11px 18px;font-size:14px;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+  .btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:var(--green-dark)}
+  .btn-ghost{background:var(--white);color:var(--ink);border:1px solid var(--rule)}.btn-ghost:hover{border-color:var(--green-accent)}
+  .btn:disabled{opacity:.6;cursor:default}
   .stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 26px}
   .pill{background:var(--white);border:1px solid var(--rule);border-radius:12px;padding:12px 16px;box-shadow:var(--shadow-sm)}
   .pill .n{font-size:20px;font-weight:700;color:var(--green-dark);line-height:1}.pill .l{font-size:11.5px;color:var(--grey);margin-top:4px}
@@ -41,6 +52,10 @@
   .c{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600}
   .c.p{background:var(--cp);color:var(--cpt)}.c.c{background:var(--cc);color:var(--cct)}.c.f{background:var(--cf);color:var(--cft)}.c.o{background:var(--co);color:var(--cot)}.c.t{background:var(--ct);color:var(--ctt)}
   .kcal{font-size:12.5px;color:var(--grey);font-weight:500}
+  .mfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
+  .swap{background:none;border:1px solid var(--rule);color:var(--green-dark);font-family:inherit;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+  .swap:hover{background:var(--green-soft);border-color:var(--green-accent)}
+  .swap:disabled{opacity:.5;cursor:default}
   .kids{margin-top:9px;padding-top:9px;border-top:1px dashed var(--rule);font-size:12px;color:var(--ink-soft)}
   .kids b{color:var(--green-dark)}
   .outcard{display:flex;flex-direction:column;justify-content:center;background:#fdf0e6;border:1px dashed #f0c9a8;border-radius:14px;padding:18px;color:var(--cct);font-size:13px;line-height:1.5}
@@ -48,16 +63,33 @@
   .snacks{display:flex;align-items:center;gap:10px;margin-top:12px;padding:11px 14px;background:var(--white);border:1px solid var(--rule);border-radius:12px;font-size:12.5px;color:var(--ink-soft)}
   .snacks .ic{width:26px;height:26px;border-radius:8px;background:var(--co);display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .snacks b{color:var(--ink)}
-  nav.appnav{display:flex;align-items:center;gap:4px}
-  nav.appnav a{font-size:13.5px;font-weight:600;color:var(--ink-soft);text-decoration:none;padding:7px 12px;border-radius:8px}
-  nav.appnav a:hover{background:var(--green-soft);color:var(--green-dark)}
-  nav.appnav a.on{color:var(--green-dark);background:var(--green-soft)}
-  nav.appnav button{background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--grey);cursor:pointer;padding:7px 12px;border-radius:8px}
-  nav.appnav button:hover{color:#9c3e3e}
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:4px}
-  .btn{border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:10px;padding:11px 18px;font-size:14px;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
-  .btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:var(--green-dark)}
-  .btn-ghost{background:var(--white);color:var(--ink);border:1px solid var(--rule)}
+  /* shopping list */
+  .shopwrap{margin-top:12px;background:var(--white);border:1px solid var(--rule);border-radius:16px;box-shadow:var(--shadow-sm);padding:22px 24px}
+  .shophead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .shophead h2{font-size:20px;font-weight:700}
+  .shopsub{font-size:13px;color:var(--grey);margin-bottom:18px}
+  .shopcat{margin-bottom:18px}
+  .shopcat h3{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--green-dark);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+  .item{display:flex;align-items:flex-start;gap:11px;padding:7px 0;font-size:14px}
+  .item input{margin-top:3px;width:16px;height:16px;accent-color:var(--green);cursor:pointer;flex-shrink:0}
+  .item .nm{flex:1}.item .nm .qn{display:block;font-size:11.5px;color:var(--grey)}
+  .item.done .nm{text-decoration:line-through;color:var(--grey-light)}
+  .item .pr{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;font-weight:600}
+  .shoptot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:16px;border-top:2px solid var(--rule);font-size:15px;font-weight:700}
+  .shoptot .big{font-size:22px;color:var(--green-dark)}
+  /* swap modal */
+  .overlay{position:fixed;inset:0;background:rgba(31,31,31,.5);display:none;align-items:center;justify-content:center;z-index:70;padding:20px}
+  .overlay.show{display:flex}
+  .modal{background:var(--white);border-radius:18px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4);max-width:460px;width:100%;max-height:86vh;overflow:auto;padding:24px}
+  .modal h3{font-size:18px;font-weight:700;margin-bottom:4px}
+  .modal .msub{font-size:13px;color:var(--grey);margin-bottom:16px}
+  .alt{border:1px solid var(--rule);border-radius:12px;padding:13px 15px;margin-bottom:10px;cursor:pointer;transition:.15s}
+  .alt:hover{border-color:var(--green-accent);background:var(--green-soft)}
+  .alt .an{font-size:14.5px;font-weight:600;margin-bottom:3px}
+  .alt .ad{font-size:12.5px;color:var(--ink-soft)}
+  .alt .ak{font-size:12px;color:var(--green-dark);font-weight:600;margin-top:5px}
+  .modal .close{background:none;border:none;font-family:inherit;font-size:14px;color:var(--grey);cursor:pointer;margin-top:6px;text-decoration:underline}
+  .modal .loading{font-size:14px;color:var(--ink-soft);padding:20px 0;text-align:center}
   @media(max-width:760px){.grid{grid-template-columns:1fr 1fr}}
   @media(max-width:480px){.grid{grid-template-columns:1fr}nav.appnav a,nav.appnav button{padding:7px 8px;font-size:12.5px}}
 </style>
@@ -78,17 +110,27 @@
       <div class="eyebrow" id="range">Your week</div>
       <h1>This week's plan.</h1>
     </div>
-    <a class="btn btn-primary" href="thisweek.html">Plan another week →</a>
+    <div class="actions">
+      <button class="btn btn-primary" id="approveBtn" type="button" style="display:none">Approve &amp; view shopping list ↓</button>
+      <a class="btn btn-ghost" href="thisweek.html">Plan another week →</a>
+    </div>
   </div>
   <div id="banner" class="note" style="display:none"></div>
   <div class="stats" id="stats"></div>
   <div id="days"></div>
+  <div id="shopping"></div>
 </main>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
 
 <script>
 const BACKEND='https://meal-plan-backend-su6p.onrender.com';
 let authToken=(typeof localStorage!=='undefined'&&localStorage.getItem('authToken'))||null;
-function api(path){const o={headers:{'Content-Type':'application/json'}};if(authToken)o.headers.Authorization='Bearer '+authToken;return fetch(BACKEND+path,o).then(r=>r.json());}
+function api(path,method,body){const o={method:method||'GET',headers:{'Content-Type':'application/json'}};if(authToken)o.headers.Authorization='Bearer '+authToken;if(body)o.body=JSON.stringify(body);return fetch(BACKEND+path,o).then(r=>r.json());}
+
+let currentPlan=null;   // the plan being viewed (mutated by swaps)
 
 // ── themed "photo" tile (stand-in for the matched stock library) ──
 function tile(theme){
@@ -129,8 +171,10 @@ function dayTag(d){
   if(t.indexOf('rest')>=0)return['rest','Rest day'];
   return['rest',''];
 }
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function render(plan){
+  currentPlan=plan;
   document.getElementById('range').textContent = 'Your week · '+((plan.days||[]).length)+' days';
   // stats
   const s=document.getElementById('stats');s.innerHTML='';
@@ -141,40 +185,149 @@ function render(plan){
   if(plan.rest_day_kcal)s.appendChild(stat(plan.rest_day_kcal,'Rest day kcal'));
 
   const wrap=document.getElementById('days');wrap.innerHTML='';
-  (plan.days||[]).forEach(d=>{
+  (plan.days||[]).forEach((d,di)=>{
     const block=document.createElement('div');block.className='day';
     const [tc,tl]=dayTag(d);
-    const meals=(d.meals||[]).filter(m=>m.type!=='Snack');
-    const snacks=(d.meals||[]).filter(m=>m.type==='Snack');
-    const cards=meals.map(m=>{
+    const allMeals=d.meals||[];
+    const cards=allMeals.map((m,mi)=>{
+      if(m.type==='Snack')return '';
       if(m.is_out){
-        return `<div class="outcard"><div class="sl">${m.type}</div>🍜 Eating out — ${m.out_suggestion||'no dinner planned; the rest of the day is a touch lighter to balance.'}</div>`;
+        return `<div class="outcard"><div class="sl">${esc(m.type)}</div>🍜 Eating out — ${esc(m.out_suggestion||'no dinner planned; the rest of the day is a touch lighter to balance.')}</div>`;
       }
-      const kids=m.kids_meal&&m.kids_meal.name?`<div class="kids"><b>Kids eat separately:</b> ${m.kids_meal.name}${m.kids_meal.kcal?' · '+Math.round(m.kids_meal.kcal)+' kcal':''}</div>`:'';
+      const kids=m.kids_meal&&m.kids_meal.name?`<div class="kids"><b>Kids eat separately:</b> ${esc(m.kids_meal.name)}${m.kids_meal.kcal?' · '+Math.round(m.kids_meal.kcal)+' kcal':''}</div>`:'';
       return `<div class="meal">
-        <div class="mimg" style="background-image:url('${tile(themeFor(m.name))}')"><span class="slot">${m.type}</span></div>
+        <div class="mimg" style="background-image:url('${tile(themeFor(m.name))}')"><span class="slot">${esc(m.type)}</span></div>
         <div class="mbody">
-          <div class="mname">${m.name||''}</div>
+          <div class="mname">${esc(m.name||'')}</div>
           <div class="chips">${macroChips(m)}</div>
-          <div class="kcal">${m.kcal?Math.round(m.kcal)+' kcal':''}${m.shared===false&&!m.kids_meal?' · adults':''}</div>
+          <div class="mfoot">
+            <span class="kcal">${m.kcal?Math.round(m.kcal)+' kcal':''}${m.shared===false&&!m.kids_meal?' · adults':''}</span>
+            <button class="swap" data-di="${di}" data-mi="${mi}" title="Swap this meal">↺ Swap</button>
+          </div>
           ${kids}
         </div>
       </div>`;
     }).join('');
-    let html=`<div class="day-head"><span class="day-name">${d.day||''}</span>${tl?`<span class="tag ${tc}">${tl}</span>`:''}</div><div class="grid">${cards}</div>`;
+    let html=`<div class="day-head"><span class="day-name">${esc(d.day||'')}</span>${tl?`<span class="tag ${tc}">${tl}</span>`:''}</div><div class="grid">${cards}</div>`;
+    const snacks=allMeals.filter(m=>m.type==='Snack');
     if(snacks.length){
-      const list=snacks.map(m=>m.name).join(' · ');
+      const list=snacks.map(m=>esc(m.name)).join(' · ');
       html+=`<div class="snacks"><span class="ic">🍎</span><span><b>Snacks:</b> ${list}</span></div>`;
     }
     block.innerHTML=html;wrap.appendChild(block);
   });
+
+  // shopping list availability
+  const hasShopping = plan.shopping && Object.keys(plan.shopping).some(k=>Array.isArray(plan.shopping[k])&&plan.shopping[k].length);
+  const approveBtn=document.getElementById('approveBtn');
+  const shopWrap=document.getElementById('shopping');
+  shopWrap.innerHTML='';
+  if(hasShopping){
+    approveBtn.style.display='';
+    approveBtn.disabled=false;
+    approveBtn.textContent='Approve & view shopping list ↓';
+  }else{
+    approveBtn.style.display='none';
+  }
 }
+
+function renderShopping(plan){
+  const shopWrap=document.getElementById('shopping');
+  const shop=plan.shopping||{};
+  let cats='';
+  Object.keys(shop).forEach(cat=>{
+    const items=shop[cat];
+    if(!Array.isArray(items)||!items.length)return;
+    const rows=items.map(it=>{
+      const price=(it.estimated_price_gbp!=null)?('£'+Number(it.estimated_price_gbp).toFixed(2)):'';
+      const qty=[it.qty,it.qty_note].filter(Boolean).join(' · ');
+      return `<label class="item"><input type="checkbox"><span class="nm">${esc(it.item||'')}${qty?`<span class="qn">${esc(qty)}</span>`:''}</span><span class="pr">${price}</span></label>`;
+    }).join('');
+    cats+=`<div class="shopcat"><h3>${esc(cat)}</h3>${rows}</div>`;
+  });
+  const cs=plan.cost_summary||{};
+  const total=cs.grand_total_gbp!=null?('£'+Number(cs.grand_total_gbp).toFixed(2)):'';
+  const perday=cs.per_person_per_day_gbp!=null?('£'+Number(cs.per_person_per_day_gbp).toFixed(2)+' per person / day'):'';
+  shopWrap.innerHTML=`<div class="shopwrap" id="shopcard">
+    <div class="shophead"><h2>Your shopping list</h2></div>
+    <div class="shopsub">Ordered by aisle, priced at your chosen range. Tick items as you shop.</div>
+    ${cats}
+    <div class="shoptot"><span>Estimated week total</span><span class="big">${total}</span></div>
+    ${perday?`<div class="shopsub" style="text-align:right;margin:6px 0 0">${esc(perday)}</div>`:''}
+  </div>`;
+  // tick behaviour
+  shopWrap.querySelectorAll('.item input').forEach(cb=>cb.addEventListener('change',e=>{
+    e.target.closest('.item').classList.toggle('done',e.target.checked);
+  }));
+}
+
+// ── swap flow ──
+const overlay=document.getElementById('overlay');
+const modal=document.getElementById('modal');
+function closeModal(){overlay.classList.remove('show');modal.innerHTML='';}
+overlay.addEventListener('click',e=>{if(e.target===overlay)closeModal();});
+
+async function openSwap(di,mi){
+  const meal=currentPlan.days[di].meals[mi];
+  overlay.classList.add('show');
+  modal.innerHTML=`<h3>Swap this meal</h3><div class="msub">${esc(meal.type)} · ${esc(meal.name||'')}</div><div class="loading">Finding alternatives…</div>`;
+  if(!authToken){
+    modal.innerHTML=`<h3>Swap this meal</h3><div class="msub">Sign in to get live alternatives.</div><button class="close" id="mc">Close</button>`;
+    document.getElementById('mc').addEventListener('click',closeModal);return;
+  }
+  try{
+    const res=await api('/api/plans/swap','POST',{currentMeal:meal.name,mealType:meal.type});
+    const alts=(res&&res.alternatives)||[];
+    if(!alts.length){ modal.innerHTML=`<h3>Swap this meal</h3><div class="msub">No alternatives came back — try again.</div><button class="close" id="mc">Close</button>`; document.getElementById('mc').addEventListener('click',closeModal); return; }
+    let html=`<h3>Pick a replacement</h3><div class="msub">for ${esc(meal.type)} · ${esc(meal.name||'')}</div>`;
+    alts.forEach((a,i)=>{ html+=`<div class="alt" data-i="${i}"><div class="an">${esc(a.name)}</div><div class="ad">${esc(a.description||'')}</div>${a.kcal?`<div class="ak">${Math.round(a.kcal)} kcal</div>`:''}</div>`; });
+    html+=`<button class="close" id="mc">Keep the original</button>`;
+    modal.innerHTML=html;
+    modal.querySelectorAll('.alt').forEach(node=>node.addEventListener('click',()=>{
+      const a=alts[+node.dataset.i];
+      const m=currentPlan.days[di].meals[mi];
+      m.name=a.name; m.kcal=a.kcal!=null?a.kcal:m.kcal;
+      // the swap endpoint returns name/desc/kcal only — clear stale macro figures
+      delete m.protein_g; delete m.carbs_g; delete m.fat_g; delete m.omega3_mg;
+      closeModal();
+      render(currentPlan);            // re-paint (keeps shopping button state)
+      const b=document.getElementById('banner');
+      b.style.display='flex';b.style.background='var(--green-soft)';b.style.borderColor='#cfe6da';b.style.color='var(--green-dark)';
+      b.innerHTML='<span>✓</span><span>Swapped in “'+esc(a.name)+'”. (Regenerate the week to refresh its shopping items.)</span>';
+    }));
+    document.getElementById('mc').addEventListener('click',closeModal);
+  }catch(e){
+    modal.innerHTML=`<h3>Swap this meal</h3><div class="msub">Couldn’t reach the server. Try again.</div><button class="close" id="mc">Close</button>`;
+    document.getElementById('mc').addEventListener('click',closeModal);
+  }
+}
+document.getElementById('days').addEventListener('click',e=>{
+  const btn=e.target.closest('.swap'); if(!btn)return;
+  openSwap(+btn.dataset.di,+btn.dataset.mi);
+});
+
+// approve → reveal shopping list
+document.getElementById('approveBtn').addEventListener('click',()=>{
+  if(!currentPlan)return;
+  renderShopping(currentPlan);
+  const btn=document.getElementById('approveBtn');
+  btn.textContent='Approved ✓ — shopping list below';
+  btn.disabled=true;
+  const card=document.getElementById('shopcard');
+  if(card)card.scrollIntoView({behavior:'smooth',block:'start'});
+});
 
 function banner(msg,kind){const b=document.getElementById('banner');b.style.display='flex';b.style.background=kind==='warn'?'#fdf0e6':'var(--green-soft)';b.style.borderColor=kind==='warn'?'#f0c9a8':'#cfe6da';b.style.color=kind==='warn'?'#8a4b1e':'var(--green-dark)';b.innerHTML='<span>'+(kind==='warn'?'⚠️':'✓')+'</span><span>'+msg+'</span>';}
 
 // ── sample plan (matches the claude.js JSON schema) for preview ──
 const SAMPLE={ tdee:2320, training_day_kcal:2320, rest_day_kcal:2320,
-  cost_summary:{grand_total_gbp:84},
+  cost_summary:{grand_total_gbp:84,per_person_per_day_gbp:3.0},
+  shopping:{
+    Produce:[{item:'Bananas',qty:'6-pack',estimated_price_gbp:0.95},{item:'Spinach',qty:'200g',estimated_price_gbp:0.80},{item:'Tenderstem broccoli',qty:'200g',estimated_price_gbp:1.50}],
+    Protein:[{item:'Salmon fillets',qty:'4 pack',qty_note:'~500g',estimated_price_gbp:6.50},{item:'Chicken breast',qty:'650g',estimated_price_gbp:4.20},{item:'Cod loin',qty:'2 pack',estimated_price_gbp:4.00}],
+    'Grains and carbs':[{item:'Jasmine rice',qty:'1kg',estimated_price_gbp:1.80},{item:'Rolled oats',qty:'1kg',estimated_price_gbp:1.20}],
+    'Dairy and alternatives':[{item:'Greek yoghurt',qty:'500g',estimated_price_gbp:1.60},{item:'Feta',qty:'200g',estimated_price_gbp:1.90}],
+  },
   days:[
     { day:'Monday', day_type:'training', meals:[
       {type:'Breakfast',name:'Overnight oats with banana & peanut butter',kcal:520,protein_g:22,carbs_g:75,fat_g:14},
@@ -194,7 +347,6 @@ const SAMPLE={ tdee:2320, training_day_kcal:2320, rest_day_kcal:2320,
   ]};
 
 // Unwrap whatever the API/handoff gives us into the flat plan object render() wants.
-// A freshly-generated plan is already flat ({days,...}); a saved row wraps it in plan_data.
 function unwrapPlan(x){
   if(!x||typeof x!=='object') return null;
   if(Array.isArray(x.days)) return x;                         // already the plan
@@ -212,7 +364,7 @@ async function init(){
     if(fresh){
       sessionStorage.removeItem('mpp_plan');
       const plan=unwrapPlan(JSON.parse(fresh));
-      if(plan){ render(plan); banner('Here’s your new plan for the week.','ok'); return; }
+      if(plan){ render(plan); banner('Here’s your new plan for the week. Swap any meal, or approve to get your shopping list.','ok'); return; }
     }
   }catch(e){}
 
