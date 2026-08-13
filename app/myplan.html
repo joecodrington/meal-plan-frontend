@@ -31,6 +31,8 @@
   .btn{border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:10px;padding:11px 18px;font-size:14px;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
   .btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:var(--green-dark)}
   .btn-ghost{background:var(--white);color:var(--ink);border:1px solid var(--rule)}.btn-ghost:hover{border-color:var(--green-accent)}
+  .empty{background:var(--white);border:1px solid var(--rule);border-radius:16px;box-shadow:var(--shadow-sm);padding:44px 28px;text-align:center;margin-top:10px}
+  .empty h2{font-size:20px;font-weight:700;margin-bottom:8px}.empty p{font-size:14.5px;color:var(--ink-soft);margin-bottom:18px}
   .btn:disabled{opacity:.6;cursor:default}
   .stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 26px}
   .pill{background:var(--white);border:1px solid var(--rule);border-radius:12px;padding:12px 16px;box-shadow:var(--shadow-sm)}
@@ -407,9 +409,18 @@ function unwrapPlan(x){
   return null;
 }
 
+function renderEmpty(msg){
+  document.getElementById('range').textContent='Your week';
+  document.getElementById('stats').innerHTML='';
+  document.getElementById('shopping').innerHTML='';
+  const ab=document.getElementById('approveBtn'); if(ab)ab.style.display='none';
+  document.getElementById('days').innerHTML=`<div class="empty"><h2>No plan yet</h2><p>${esc(msg||'Head to This Week to generate your first plan for the household.')}</p><a class="btn btn-primary" href="thisweek.html">Plan this week →</a></div>`;
+}
+
 async function init(){
   currentPlanId = new URLSearchParams(location.search).get('plan');   // saved-plan id (both entry paths carry it)
   loadRetailer();   // resolve which supermarket the shopping links point at (non-blocking)
+
   // 1. Fresh hand-off from This Week (most reliable) — consume once.
   try{
     const fresh=sessionStorage.getItem('mpp_plan');
@@ -420,20 +431,42 @@ async function init(){
     }
   }catch(e){}
 
-  // 2. A saved plan by id (returning to an existing plan).
-  const params=new URLSearchParams(location.search);
-  const planId=params.get('plan');
-  if(authToken && planId){
+  // Signed out → send to sign-in rather than showing demo data as if it were theirs.
+  if(!authToken){ location.replace('login.html'); return; }
+
+  // 2. A specific saved plan by id.
+  if(currentPlanId){
     banner('Loading plan…','ok');
-    try{ const res=await api('/api/plans/'+planId); const plan=unwrapPlan(res&&res.plan?res.plan:res);
+    try{ const res=await api('/api/plans/'+currentPlanId); const plan=unwrapPlan(res&&res.plan?res.plan:res);
       if(plan){ render(plan); banner('Loaded your saved plan.','ok'); return; } }
     catch(e){}
-    render(SAMPLE); banner("Couldn't load that plan — showing a sample. Try generating a fresh one from This Week.",'warn'); return;
+    // fall through to loading their most recent plan
   }
 
-  // 3. Nothing to show yet.
-  render(SAMPLE);
-  banner('Sample plan — generate one from This Week to see your household’s real plan here.','warn');
+  // 3. Cold open (nav tab / bookmark) → load the household's MOST RECENT saved plan.
+  banner('Loading your latest plan…','ok');
+  try{
+    const list=await api('/api/clients');
+    const pid=list&&list.profiles&&list.profiles[0]&&list.profiles[0].id;
+    if(pid){
+      const d=await api('/api/clients/'+pid);
+      const plans=((d&&d.plans)||[]).slice().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+      if(plans.length){
+        currentPlanId=plans[0].id;
+        const res=await api('/api/plans/'+currentPlanId);
+        const plan=unwrapPlan(res&&res.plan?res.plan:res);
+        if(plan){ render(plan); banner('Your most recent plan.','ok'); return; }
+      }
+      renderEmpty();
+      banner('No plan yet — generate your first from This Week.','warn');
+      return;
+    }
+    renderEmpty('Set up your household in Settings, then plan your week.');
+    banner('No household profile yet.','warn');
+  }catch(e){
+    renderEmpty('We couldn’t load your plan just now — please try again.');
+    banner('Couldn’t reach the server.','warn');
+  }
 }
 document.getElementById('signout').addEventListener('click',()=>{ try{localStorage.removeItem('authToken');localStorage.removeItem('currentUser');}catch(e){} location.href='login.html'; });
 init();
