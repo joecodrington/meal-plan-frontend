@@ -72,7 +72,9 @@
   .shopcat h3{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--green-dark);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
   .item{display:flex;align-items:flex-start;gap:11px;padding:7px 0;font-size:14px}
   .item input{margin-top:3px;width:16px;height:16px;accent-color:var(--green);cursor:pointer;flex-shrink:0}
-  .item .nm{flex:1}.item .nm .qn{display:block;font-size:11.5px;color:var(--grey)}
+  .item .nm{flex:1;color:var(--green-dark);text-decoration:none}
+  .item .nm:hover{text-decoration:underline}
+  .item .nm .qn{display:block;font-size:11.5px;color:var(--grey);text-decoration:none}
   .item.done .nm{text-decoration:line-through;color:var(--grey-light)}
   .item .pr{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;font-weight:600}
   .shoptot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:16px;border-top:2px solid var(--rule);font-size:15px;font-weight:700}
@@ -133,6 +135,30 @@ function api(path,method,body){const o={method:method||'GET',headers:{'Content-T
 let currentPlan=null;    // the plan being viewed
 let currentPlanId=null;  // the saved plan id (needed for a full swap)
 let shoppingShown=false; // whether the shopping list is currently revealed
+let retailer='Tesco';    // the household's chosen supermarket (for shopping links)
+
+// Build a product-search link for an item at the household's chosen supermarket.
+function retailerSearchUrl(ret, item){
+  const q=encodeURIComponent(item||'');
+  switch(String(ret||'').toLowerCase().replace(/[^a-z]/g,'')){
+    case 'tesco':      return 'https://www.tesco.com/groceries/en-GB/search?query='+q;
+    case 'sainsburys': return 'https://www.sainsburys.co.uk/gol-ui/SearchResults/'+q;
+    case 'asda':       return 'https://groceries.asda.com/search/'+q;
+    case 'waitrose':   return 'https://www.waitrose.com/ecom/shop/search?&searchTerm='+q;
+    case 'ocado':      return 'https://www.ocado.com/search?entry='+q;
+    case 'morrisons':  return 'https://groceries.morrisons.com/search?entry='+q;
+    default:           return 'https://www.google.com/search?q='+q+'+'+encodeURIComponent(ret||'supermarket');
+  }
+}
+// Load the household's retailer (fast path from sessionStorage, then confirm from the profile).
+async function loadRetailer(){
+  try{ const s=sessionStorage.getItem('mpp_retailer'); if(s) retailer=s; }catch(e){}
+  if(!authToken) return;
+  try{
+    const list=await api('/api/clients'); const id=list&&list.profiles&&list.profiles[0]&&list.profiles[0].id;
+    if(id){ const d=await api('/api/clients/'+id); const r=d&&d.profile&&(d.profile.retailer||(d.profile.client_data&&d.profile.client_data.retailer)); if(r) retailer=r; }
+  }catch(e){}
+}
 
 // ── themed "photo" tile (stand-in for the matched stock library) ──
 function tile(theme){
@@ -243,7 +269,8 @@ function renderShopping(plan){
     const rows=items.map(it=>{
       const price=(it.estimated_price_gbp!=null)?('£'+Number(it.estimated_price_gbp).toFixed(2)):'';
       const qty=[it.qty,it.qty_note].filter(Boolean).join(' · ');
-      return `<label class="item"><input type="checkbox"><span class="nm">${esc(it.item||'')}${qty?`<span class="qn">${esc(qty)}</span>`:''}</span><span class="pr">${price}</span></label>`;
+      const url=retailerSearchUrl(retailer,it.item||'');
+      return `<div class="item"><input type="checkbox"><a class="nm" href="${url}" target="_blank" rel="noopener noreferrer">${esc(it.item||'')}${qty?`<span class="qn">${esc(qty)}</span>`:''}</a><span class="pr">${price}</span></div>`;
     }).join('');
     cats+=`<div class="shopcat"><h3>${esc(cat)}</h3>${rows}</div>`;
   });
@@ -252,7 +279,7 @@ function renderShopping(plan){
   const perday=cs.per_person_per_day_gbp!=null?('£'+Number(cs.per_person_per_day_gbp).toFixed(2)+' per person / day'):'';
   shopWrap.innerHTML=`<div class="shopwrap" id="shopcard">
     <div class="shophead"><h2>Your shopping list</h2></div>
-    <div class="shopsub">Ordered by aisle, priced at your chosen range. Tick items as you shop.</div>
+    <div class="shopsub">Ordered by aisle, priced at your chosen range. Tap any item to find it at <b>${esc(retailer)}</b> (opens in a new tab); tick items as you shop.</div>
     ${cats}
     <div class="shoptot"><span>Estimated week total</span><span class="big">${total}</span></div>
     ${perday?`<div class="shopsub" style="text-align:right;margin:6px 0 0">${esc(perday)}</div>`:''}
@@ -382,6 +409,7 @@ function unwrapPlan(x){
 
 async function init(){
   currentPlanId = new URLSearchParams(location.search).get('plan');   // saved-plan id (both entry paths carry it)
+  loadRetailer();   // resolve which supermarket the shopping links point at (non-blocking)
   // 1. Fresh hand-off from This Week (most reliable) — consume once.
   try{
     const fresh=sessionStorage.getItem('mpp_plan');

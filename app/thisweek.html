@@ -215,7 +215,7 @@ async function generate(){
     if(res&&res.success&&res.plan){
       // Hand the fresh plan to My Plan via sessionStorage (always works), and
       // pass the saved id in the URL when the plan was persisted.
-      try{ sessionStorage.setItem('mpp_plan',JSON.stringify(res.plan)); }catch(e){}
+      try{ sessionStorage.setItem('mpp_plan',JSON.stringify(res.plan)); sessionStorage.setItem('mpp_retailer', payload.retailer||'Tesco'); }catch(e){}
       toast('Plan ready ✓ — opening your week…');
       const q=res.planId?('?plan='+encodeURIComponent(res.planId)):'';
       location.href='myplan.html'+q;
