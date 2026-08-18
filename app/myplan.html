@@ -122,6 +122,7 @@
     </div>
     <div class="actions">
       <button class="btn btn-primary" id="approveBtn" type="button" style="display:none">Approve &amp; view shopping list ↓</button>
+      <button class="btn btn-ghost" id="raceBtn" type="button" style="display:none">🏁 Race-week plan</button>
       <a class="btn btn-ghost" href="thisweek.html">Plan another week →</a>
     </div>
   </div>
@@ -145,7 +146,7 @@ let currentPlanId=null;  // the saved plan id (needed for a full swap)
 let shoppingShown=false; // whether the shopping list is currently revealed
 const eatenSet=new Set();// meals ticked as eaten this session (keyed "di:mi")
 // household context, loaded from the profile
-const ctx={ profileId:null, retailer:'Tesco', familySize:2, favourites:new Set() };
+const ctx={ profileId:null, retailer:'Tesco', familySize:2, favourites:new Set(), athlete:null };
 
 // Build a product-search link for an item at the household's chosen supermarket.
 function retailerSearchUrl(ret, item){
@@ -172,6 +173,11 @@ async function loadContext(){
     const kids=((p.children||c.children||[])||[]).length||0;
     ctx.familySize=Math.max(1,Math.min(10, 1+(c.hasAdult2?1:0)+kids));
     ctx.favourites=new Set(Array.isArray(c.favouriteMeals)?c.favouriteMeals:[]);
+    // Who (if anyone) trains for a sport — enables the race-week fuelling plan.
+    if(c.hasSports && c.sport) ctx.athlete={name:c.fname,sport:c.sport,weight:c.weight,diet:c.diet,giSensitivity:c.giSensitivity,eventName:c.eventName};
+    else if(c.adult2hasSports && c.adult2sport) ctx.athlete={name:c.adult2name||'Partner',sport:c.adult2sport,weight:c.adult2weight,diet:c.adult2diet,giSensitivity:c.giSensitivity,eventName:c.adult2eventName||c.eventName};
+    else ctx.athlete=null;
+    const rb=document.getElementById('raceBtn'); if(rb) rb.style.display=ctx.athlete?'':'none';
     if(currentPlan) repaint();   // reflect favourites/retailer now they're known
   }catch(e){}
 }
@@ -432,6 +438,26 @@ document.getElementById('days').addEventListener('click',e=>{
   else if(act==='fav') toggleFav(di,mi,btn);
   else if(act==='eaten') toggleEaten(di,mi,btn);
 });
+
+// ── race-week fuelling plan (endurance events) ──
+async function openRaceWeek(){
+  const a=ctx.athlete; if(!a)return;
+  const head=`${esc(a.sport)}${a.eventName?' · '+esc(a.eventName):''} · ${esc(a.name||'athlete')}`;
+  overlay.classList.add('show');
+  modal.innerHTML=`<h3>Race-week fuelling</h3><div class="msub">${head}</div><div class="loading">Building your race-week plan… (~15–20s)</div>`;
+  if(!authToken){ modal.innerHTML=`<h3>Race-week fuelling</h3><div class="msub">Sign in to generate your race-week plan.</div><button class="close" id="mc">Close</button>`; document.getElementById('mc').addEventListener('click',closeModal); return; }
+  try{
+    const res=await api('/api/plans/race-week','POST',{sport:a.sport,eventName:a.eventName||'',clientData:{weight:a.weight,diet:a.diet||[],giSensitivity:a.giSensitivity||'none'}});
+    const text=(res&&res.raceWeekPlan)||'';
+    if(!text){ modal.innerHTML=`<h3>Race-week fuelling</h3><div class="msub">${head}</div><div class="msub">No plan came back — try again.</div><button class="close" id="mc">Close</button>`; }
+    else { modal.innerHTML=`<h3>Race-week fuelling</h3><div class="msub">${head}</div><div class="recipe"><p>${fmtRecipe(text)}</p></div><button class="close" id="mc">Close</button>`; }
+    document.getElementById('mc').addEventListener('click',closeModal);
+  }catch(e){
+    modal.innerHTML=`<h3>Race-week fuelling</h3><div class="msub">Couldn’t reach the server. Try again.</div><button class="close" id="mc">Close</button>`;
+    document.getElementById('mc').addEventListener('click',closeModal);
+  }
+}
+document.getElementById('raceBtn').addEventListener('click',openRaceWeek);
 
 // approve → reveal shopping list
 document.getElementById('approveBtn').addEventListener('click',()=>{
