@@ -55,9 +55,15 @@
   .c.p{background:var(--cp);color:var(--cpt)}.c.c{background:var(--cc);color:var(--cct)}.c.f{background:var(--cf);color:var(--cft)}.c.o{background:var(--co);color:var(--cot)}.c.t{background:var(--ct);color:var(--ctt)}
   .kcal{font-size:12.5px;color:var(--grey);font-weight:500}
   .mfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
-  .swap{background:none;border:1px solid var(--rule);color:var(--green-dark);font-family:inherit;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
-  .swap:hover{background:var(--green-soft);border-color:var(--green-accent)}
-  .swap:disabled{opacity:.5;cursor:default}
+  .macts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .mact{background:none;border:1px solid var(--rule);color:var(--ink-soft);font-family:inherit;font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+  .mact:hover{background:var(--green-soft);border-color:var(--green-accent);color:var(--green-dark)}
+  .mact.fav{font-size:14px;line-height:1;padding:5px 9px}
+  .mact.fav.on{color:#c0392b;border-color:#e8b4b4;background:#fdecec}
+  .mact.eaten.on{background:var(--green);border-color:var(--green);color:#fff}
+  .meal.eaten{opacity:.62}
+  .modal .recipe{font-size:14px;line-height:1.6;color:var(--ink-soft);max-height:56vh;overflow:auto;margin:4px 0 8px}
+  .modal .recipe p{margin:0 0 10px}
   .kids{margin-top:9px;padding-top:9px;border-top:1px dashed var(--rule);font-size:12px;color:var(--ink-soft)}
   .kids b{color:var(--green-dark)}
   .outcard{display:flex;flex-direction:column;justify-content:center;background:#fdf0e6;border:1px dashed #f0c9a8;border-radius:14px;padding:18px;color:var(--cct);font-size:13px;line-height:1.5}
@@ -137,7 +143,9 @@ function api(path,method,body){const o={method:method||'GET',headers:{'Content-T
 let currentPlan=null;    // the plan being viewed
 let currentPlanId=null;  // the saved plan id (needed for a full swap)
 let shoppingShown=false; // whether the shopping list is currently revealed
-let retailer='Tesco';    // the household's chosen supermarket (for shopping links)
+const eatenSet=new Set();// meals ticked as eaten this session (keyed "di:mi")
+// household context, loaded from the profile
+const ctx={ profileId:null, retailer:'Tesco', familySize:2, favourites:new Set() };
 
 // Build a product-search link for an item at the household's chosen supermarket.
 function retailerSearchUrl(ret, item){
@@ -152,14 +160,26 @@ function retailerSearchUrl(ret, item){
     default:           return 'https://www.google.com/search?q='+q+'+'+encodeURIComponent(ret||'supermarket');
   }
 }
-// Load the household's retailer (fast path from sessionStorage, then confirm from the profile).
-async function loadRetailer(){
-  try{ const s=sessionStorage.getItem('mpp_retailer'); if(s) retailer=s; }catch(e){}
+// Load the household profile: retailer, family size, and saved favourites.
+async function loadContext(){
+  try{ const s=sessionStorage.getItem('mpp_retailer'); if(s) ctx.retailer=s; }catch(e){}
   if(!authToken) return;
   try{
     const list=await api('/api/clients'); const id=list&&list.profiles&&list.profiles[0]&&list.profiles[0].id;
-    if(id){ const d=await api('/api/clients/'+id); const r=d&&d.profile&&(d.profile.retailer||(d.profile.client_data&&d.profile.client_data.retailer)); if(r) retailer=r; }
+    if(!id) return; ctx.profileId=id;
+    const d=await api('/api/clients/'+id); const p=(d&&d.profile)||{}; const c=p.client_data||{};
+    if(p.retailer||c.retailer) ctx.retailer=p.retailer||c.retailer;
+    const kids=((p.children||c.children||[])||[]).length||0;
+    ctx.familySize=Math.max(1,Math.min(10, 1+(c.hasAdult2?1:0)+kids));
+    ctx.favourites=new Set(Array.isArray(c.favouriteMeals)?c.favouriteMeals:[]);
+    if(currentPlan) repaint();   // reflect favourites/retailer now they're known
   }catch(e){}
+}
+// Re-render the current plan, preserving a revealed shopping list.
+function repaint(){
+  if(!currentPlan)return;
+  render(currentPlan);
+  if(shoppingShown){ renderShopping(currentPlan); const b=document.getElementById('approveBtn'); if(b){b.textContent='Approved ✓ — shopping list below';b.disabled=true;} }
 }
 
 // ── themed "photo" tile (stand-in for the matched stock library) ──
@@ -225,14 +245,19 @@ function render(plan){
         return `<div class="outcard"><div class="sl">${esc(m.type)}</div>🍜 Eating out — ${esc(m.out_suggestion||'no dinner planned; the rest of the day is a touch lighter to balance.')}</div>`;
       }
       const kids=m.kids_meal&&m.kids_meal.name?`<div class="kids"><b>Kids eat separately:</b> ${esc(m.kids_meal.name)}${m.kids_meal.kcal?' · '+Math.round(m.kids_meal.kcal)+' kcal':''}</div>`:'';
-      return `<div class="meal">
+      const isFav=ctx.favourites.has(m.name);
+      const isEaten=eatenSet.has(di+':'+mi);
+      return `<div class="meal${isEaten?' eaten':''}">
         <div class="mimg" style="background-image:url('${tile(themeFor(m.name))}')"><span class="slot">${esc(m.type)}</span></div>
         <div class="mbody">
           <div class="mname">${esc(m.name||'')}</div>
           <div class="chips">${macroChips(m)}</div>
-          <div class="mfoot">
-            <span class="kcal">${m.kcal?Math.round(m.kcal)+' kcal':''}${m.shared===false&&!m.kids_meal?' · adults':''}</span>
-            <button class="swap" data-di="${di}" data-mi="${mi}" title="Swap this meal">↺ Swap</button>
+          <div class="mfoot"><span class="kcal">${m.kcal?Math.round(m.kcal)+' kcal':''}${m.shared===false&&!m.kids_meal?' · adults':''}</span></div>
+          <div class="macts">
+            <button class="mact eaten${isEaten?' on':''}" data-act="eaten" data-di="${di}" data-mi="${mi}" title="Mark as eaten">✓ Eaten</button>
+            <button class="mact" data-act="recipe" data-di="${di}" data-mi="${mi}" title="See the recipe">Recipe</button>
+            <button class="mact fav${isFav?' on':''}" data-act="fav" data-di="${di}" data-mi="${mi}" title="Save as favourite">${isFav?'♥':'♡'}</button>
+            <button class="mact" data-act="swap" data-di="${di}" data-mi="${mi}" title="Swap this meal">↺ Swap</button>
           </div>
           ${kids}
         </div>
@@ -271,7 +296,7 @@ function renderShopping(plan){
     const rows=items.map(it=>{
       const price=(it.estimated_price_gbp!=null)?('£'+Number(it.estimated_price_gbp).toFixed(2)):'';
       const qty=[it.qty,it.qty_note].filter(Boolean).join(' · ');
-      const url=retailerSearchUrl(retailer,it.item||'');
+      const url=retailerSearchUrl(ctx.retailer,it.item||'');
       return `<div class="item"><input type="checkbox"><a class="nm" href="${url}" target="_blank" rel="noopener noreferrer">${esc(it.item||'')}${qty?`<span class="qn">${esc(qty)}</span>`:''}</a><span class="pr">${price}</span></div>`;
     }).join('');
     cats+=`<div class="shopcat"><h3>${esc(cat)}</h3>${rows}</div>`;
@@ -281,7 +306,7 @@ function renderShopping(plan){
   const perday=cs.per_person_per_day_gbp!=null?('£'+Number(cs.per_person_per_day_gbp).toFixed(2)+' per person / day'):'';
   shopWrap.innerHTML=`<div class="shopwrap" id="shopcard">
     <div class="shophead"><h2>Your shopping list</h2></div>
-    <div class="shopsub">Ordered by aisle, priced at your chosen range. Tap any item to find it at <b>${esc(retailer)}</b> (opens in a new tab); tick items as you shop.</div>
+    <div class="shopsub">Ordered by aisle, priced at your chosen range. Tap any item to find it at <b>${esc(ctx.retailer)}</b> (opens in a new tab); tick items as you shop.</div>
     ${cats}
     <div class="shoptot"><span>Estimated week total</span><span class="big">${total}</span></div>
     ${perday?`<div class="shopsub" style="text-align:right;margin:6px 0 0">${esc(perday)}</div>`:''}
@@ -337,10 +362,9 @@ async function applySwap(di,mi,alt){
   try{
     const res=await api('/api/plans/'+currentPlanId+'/apply-swap','POST',{dayIndex:di,mealIndex:mi,replacementName:alt.name});
     if(res&&res.success&&res.plan){
-      const keepShopping=shoppingShown;
       closeModal();
-      render(res.plan);
-      if(keepShopping){ renderShopping(currentPlan); const b=document.getElementById('approveBtn'); if(b){b.textContent='Approved ✓ — shopping list below';b.disabled=true;} }
+      currentPlan=res.plan;
+      repaint();
       banner('Swapped in “'+esc(alt.name)+'” — calories, macros and shopping list updated'+(res.saved?' and saved.':'.'),'ok');
     }else{
       modal.innerHTML=`<h3>Couldn’t apply the swap</h3><div class="msub">${esc((res&&res.error)||'Please try again.')}</div><button class="close" id="mc">Close</button>`;
@@ -352,9 +376,61 @@ async function applySwap(di,mi,alt){
   }
 }
 
+// ── recipe / method view ──
+function fmtRecipe(t){ return esc(String(t||'')).replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br>'); }
+async function openRecipe(di,mi){
+  const m=currentPlan.days[di].meals[mi];
+  overlay.classList.add('show');
+  modal.innerHTML=`<h3>${esc(m.name||'Recipe')}</h3><div class="msub">${esc(m.type||'')} · serves ${ctx.familySize}</div><div class="loading">Writing the recipe…</div>`;
+  if(!authToken){ modal.innerHTML=`<h3>${esc(m.name||'Recipe')}</h3><div class="msub">Sign in to see the full method.</div><button class="close" id="mc">Close</button>`; document.getElementById('mc').addEventListener('click',closeModal); return; }
+  try{
+    const res=await api('/api/plans/recipes','POST',{meals:[{name:m.name,type:m.type}],familySize:ctx.familySize});
+    const text=(res&&res.recipes)||'';
+    if(!text){ modal.innerHTML=`<h3>${esc(m.name)}</h3><div class="msub">No method came back — try again.</div><button class="close" id="mc">Close</button>`; }
+    else { modal.innerHTML=`<h3>${esc(m.name)}</h3><div class="msub">${esc(m.type)} · serves ${ctx.familySize}</div><div class="recipe"><p>${fmtRecipe(text)}</p></div><button class="close" id="mc">Close</button>`; }
+    document.getElementById('mc').addEventListener('click',closeModal);
+  }catch(e){
+    modal.innerHTML=`<h3>${esc(m.name||'Recipe')}</h3><div class="msub">Couldn’t reach the server. Try again.</div><button class="close" id="mc">Close</button>`;
+    document.getElementById('mc').addEventListener('click',closeModal);
+  }
+}
+
+// ── save a meal as a favourite (recurs in future plans) ──
+async function toggleFav(di,mi,btn){
+  const name=currentPlan.days[di].meals[mi].name; if(!name)return;
+  if(!authToken||!ctx.profileId){ banner('Sign in to save favourite meals.','warn'); return; }
+  const nowFav=!ctx.favourites.has(name);
+  if(nowFav) ctx.favourites.add(name); else ctx.favourites.delete(name);
+  btn.classList.toggle('on',nowFav); btn.textContent=nowFav?'♥':'♡';
+  const favObj={}; ctx.favourites.forEach(n=>favObj[n]=true);
+  try{
+    const res=await api('/api/clients/'+ctx.profileId+'/favourites','PATCH',{favourites:favObj});
+    if(res&&res.success){ banner((nowFav?'Saved “'+esc(name)+'” to favourites.':'Removed “'+esc(name)+'” from favourites.')+' Future plans can include your favourites.','ok'); }
+    else { throw new Error(); }
+  }catch(e){
+    // roll back the optimistic toggle
+    if(nowFav) ctx.favourites.delete(name); else ctx.favourites.add(name);
+    btn.classList.toggle('on',ctx.favourites.has(name)); btn.textContent=ctx.favourites.has(name)?'♥':'♡';
+    banner('Couldn’t save favourite — try again.','warn');
+  }
+}
+
+// ── mark a meal as eaten (client tracking) ──
+async function toggleEaten(di,mi,btn){
+  const key=di+':'+mi; const now=!eatenSet.has(key);
+  if(now) eatenSet.add(key); else eatenSet.delete(key);
+  btn.classList.toggle('on',now);
+  const card=btn.closest('.meal'); if(card) card.classList.toggle('eaten',now);
+  if(authToken && currentPlanId){ try{ await api('/api/plans/'+currentPlanId+'/meal-complete','PATCH',{dayIndex:di,mealIndex:mi,completed:now}); }catch(e){} }
+}
+
 document.getElementById('days').addEventListener('click',e=>{
-  const btn=e.target.closest('.swap'); if(!btn)return;
-  openSwap(+btn.dataset.di,+btn.dataset.mi);
+  const btn=e.target.closest('.mact'); if(!btn)return;
+  const di=+btn.dataset.di, mi=+btn.dataset.mi, act=btn.dataset.act;
+  if(act==='swap') openSwap(di,mi);
+  else if(act==='recipe') openRecipe(di,mi);
+  else if(act==='fav') toggleFav(di,mi,btn);
+  else if(act==='eaten') toggleEaten(di,mi,btn);
 });
 
 // approve → reveal shopping list
@@ -419,7 +495,7 @@ function renderEmpty(msg){
 
 async function init(){
   currentPlanId = new URLSearchParams(location.search).get('plan');   // saved-plan id (both entry paths carry it)
-  loadRetailer();   // resolve which supermarket the shopping links point at (non-blocking)
+  loadContext();   // profile: retailer (shopping links), family size (recipes), favourites (non-blocking)
 
   // 1. Fresh hand-off from This Week (most reliable) — consume once.
   try{
