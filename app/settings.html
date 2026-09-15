@@ -172,6 +172,23 @@ function goalText(goal,rate){
   return `About ${sign}${Math.abs(d)} kcal/day vs maintenance · protein ${g.protein}.`;
 }
 
+// ── sport fuelling profile (mirrors sportTypeFor() in services/nutrition.js) ──
+// Endurance sports peak for a single event. Strength, CrossFit and team sports
+// do not, so an event date and a carb-loading protocol are meaningless for them
+// and the backend suppresses both. Hide the fields rather than collect data that
+// will be thrown away. Keyword matching, not an exact list, so adding a sport to
+// M.SPORTS cannot silently reintroduce the wrong fields.
+function sportHasEvent(sport){
+  const s=String(sport||'').toLowerCase();
+  if(!s) return true;
+  if(s.includes('crossfit')||s.includes('cross fit')||s.includes('hiit')||s.includes('circuit')||s.includes('bootcamp')) return false;
+  if(s.includes('strength')||s.includes('weight train')||s.includes('weights')||s.includes('weightlift')||
+     s.includes('powerlift')||s.includes('olympic lift')||s.includes('bodybuild')||s.includes('resistance')||s.includes('gym')) return false;
+  if(s.includes('team')||s.includes('football')||s.includes('soccer')||s.includes('rugby')||s.includes('hockey')||
+     s.includes('netball')||s.includes('basketball')||s.includes('cricket')||s.includes('tennis')) return false;
+  return true;
+}
+
 // ── tiny DOM helpers ──
 const el=(t,a,kids)=>{const e=document.createElement(t);for(const k in(a||{})){if(k==='class')e.className=a[k];else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),a[k]);else if(k==='html')e.innerHTML=a[k];else e.setAttribute(k,a[k]);}(kids||[]).forEach(c=>{if(c==null)return;e.appendChild((typeof c==='string'||typeof c==='number')?document.createTextNode(String(c)):c);});return e;};
 function sel(value,opts,onchange){const s=el('select',{onchange:e=>onchange(e.target.value)});opts.forEach(o=>{const label=Array.isArray(o)?o[1]:o,val=Array.isArray(o)?o[0]:o;const op=el('option',{},[label]);op.value=val;if(String(val)===String(value))op.selected=true;s.appendChild(op);});return s;}
@@ -243,14 +260,29 @@ function trainingBlock(a,i){
   wrap.appendChild(el('div',{class:'person-label'},[el('span',{},[i===0?'You':(a.name||'Partner')])]));
   wrap.appendChild(el('div',{class:'frow c3'},[
     field('Training for something?',sel(a.training.on?'yes':'no',[['no','No (general health)'],['yes','Yes']],v=>{a.training.on=(v==='yes');render();})),
-    field('Sport',sel(a.training.sport,[''].concat(M.SPORTS),v=>a.training.sport=v)),
+    field('Sport',sel(a.training.sport,[''].concat(M.SPORTS),v=>{
+      a.training.sport=v;
+      // Switching to a non-event sport clears the event fields so the stored
+      // profile matches what the form shows — they are hidden, not just ignored.
+      if(!sportHasEvent(v)){ a.training.eventDate=''; a.training.weeksToEvent=''; a.training.carbLoad='off'; }
+      render();
+    })),
     field('Intensity',sel(a.training.intensity,['easy','moderate','hard'],v=>a.training.intensity=v)),
   ]));
-  wrap.appendChild(el('div',{class:'frow c3'},[
-    field('Sessions / week',txt(a.training.sessionsPerWeek,v=>a.training.sessionsPerWeek=v,'number')),
-    field('Event date <span class="sub2">— auto race-week</span>',txt(a.training.eventDate,v=>a.training.eventDate=v,'date')),
-    field('Carb loading',sel(a.training.carbLoad,[['auto','Auto — race week'],['on','Always on'],['off','Off']],v=>a.training.carbLoad=v)),
-  ]));
+
+  const hasEvent=sportHasEvent(a.training.sport);
+  const row2=[field('Sessions / week',txt(a.training.sessionsPerWeek,v=>a.training.sessionsPerWeek=v,'number'))];
+  if(hasEvent){
+    row2.push(field('Event date <span class="sub2">— auto race-week</span>',txt(a.training.eventDate,v=>a.training.eventDate=v,'date')));
+    row2.push(field('Carb loading',sel(a.training.carbLoad,[['auto','Auto — race week'],['on','Always on'],['off','Off']],v=>a.training.carbLoad=v)));
+  }
+  wrap.appendChild(el('div',{class:'frow c3'},row2));
+
+  if(!hasEvent && a.training.on){
+    wrap.appendChild(el('div',{class:'goal-eff'},[
+      'Strength, CrossFit and team sports are fuelled by protein rather than carbohydrate loading, so there is no event date or carb-loading protocol here. Your plan periodises around training days instead.'
+    ]));
+  }
   return wrap;
 }
 
